@@ -11,28 +11,20 @@ const foreign_type_registry = Ref{Ptr{Cvoid}}(C_NULL)
 const ledger = Ref{Ptr{Cvoid}}(C_NULL)
 
 using Base: @lock
+import Base: convert
 
 # Call show and write the output to a string.
 function valuestring(value)::String
-    @nospecialize value
     io = IOBuffer()
     show(io, "text/plain", value)
     String(take!(io))
 end
 
 # Call showerror and write the output to a string.
-if VERSION.minor == 7
-    function errorstring(value)::String
-        @nospecialize value
-        "<Jlrs.errorstring is not compatible with Julia 1.7>"
-    end
-else
-    function errorstring(value)::String
-        @nospecialize value
-        io = IOBuffer()
-        showerror(IOContext(io, :color => color[], :compact => true, :limit => true), value)
-        String(take!(io))
-    end
+function errorstring(value)::String
+    io = IOBuffer()
+    showerror(IOContext(io, :color => color[], :compact => true, :limit => true), value)
+    String(take!(io))
 end
 
 # Exception thrown when data can't be borrowed.
@@ -46,11 +38,10 @@ mutable struct RustResult{T}
     is_exc::Bool
 end
 
-function Base.convert(::Type{T}, data::RustResult{T})::T where T
-    data()
-end
+convert(::Type{T}, data::RustResult{T}) where T = data()
+convert(::Type{Nothing}, data::Jlrs.RustResult{Nothing}) = data()
 
-function (res::RustResult{T})()::T where T
+function (res::RustResult{T})() where T
     if res.is_exc
         throw(res.data)
     else
@@ -95,12 +86,14 @@ function init_foreign_type_registry(func::Ptr{Cvoid})
     end
 end
 
-# Calls the function that creates the foreign Stack type in this module, the function is
-# implemented in Rust: ::jlrs::memory::context::stack::Stack::init
-function init_stack_type(func, closure, mod)
-    @lock init_lock begin
-        ccall(func, Cvoid, (Any,Any), closure, mod)
-    end
+# Called from Rust to ensure the `Stack` type is only created once.
+function lock_init_lock()
+    lock(init_lock)
+end
+
+# Called from Rust to ensure the `Stack` type is only created once.
+function unlock_init_lock()
+    unlock(init_lock)
 end
 
 if VERSION.minor >= 9
