@@ -103,7 +103,7 @@ function initialize_julia_module(mod::Module)
     end
 
     for (fidx,mkey) in enumerate(mod.__jlrswrap_methodkeys)
-        mod._jlrswwrap_pointers[fidx] = _get_function_pointer(mkey)
+        mod._jlrswrap_pointers[fidx] = _get_function_pointer(mkey)
     end
 end
 
