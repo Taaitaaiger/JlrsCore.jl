@@ -10,22 +10,25 @@ mutable struct HasCustomAtomicField
     @atomic a::WithInt32
 end
 
-@testset "Structs with atomic fields are skipped" begin
+@testset "Only a type constructor is generated for structs with atomic fields" begin
     @test begin
         b = Reflect.reflect([HasAtomicField])
-        sb = Reflect.StringWrappers(b)
+        sb = Reflect.StringLayouts(b)
 
-        haskey(sb.dict, Reflect.basetype(HasAtomicField)) == false
+        sb.dict[Reflect.basetype(HasAtomicField)] === """#[derive(ConstructType)]
+        #[jlrs(julia_type = "Main.HasAtomicField")]
+        pub struct HasAtomicFieldTypeConstructor {
+        }"""
     end
 end
 
 @testset "Fields of structs with atomic fields are included" begin
     @test begin
         b = Reflect.reflect([HasCustomAtomicField])
-        sb = Reflect.StringWrappers(b)
+        sb = Reflect.StringLayouts(b)
 
         sb[WithInt32] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, ValidField, Typecheck, IntoJulia, ConstructType, CCallArg)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.WithInt32")]
         pub struct WithInt32 {
             pub int32: i32,

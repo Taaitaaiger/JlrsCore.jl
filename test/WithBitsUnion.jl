@@ -21,10 +21,10 @@ end
 @testset "Structs with bits unions" begin
     @test begin
         b = Reflect.reflect([SingleVariant])
-        sb = Reflect.StringWrappers(b)
+        sb = Reflect.StringLayouts(b)
 
         sb[Reflect.basetype(SingleVariant)] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, ValidField, Typecheck, IntoJulia, ConstructType, CCallArg)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.SingleVariant")]
         pub struct SingleVariant {
             pub a: i32,
@@ -33,10 +33,10 @@ end
 
     @test begin
         b = Reflect.reflect([DoubleVariant])
-        sb = Reflect.StringWrappers(b)
+        sb = Reflect.StringLayouts(b)
 
         sb[Reflect.basetype(DoubleVariant)] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, ValidField, Typecheck, ConstructType, CCallArg)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.DoubleVariant")]
         pub struct DoubleVariant {
             #[jlrs(bits_union_align)]
@@ -50,10 +50,10 @@ end
 
     @test begin
         b = Reflect.reflect([SizeAlignMismatch])
-        sb = Reflect.StringWrappers(b)
+        sb = Reflect.StringLayouts(b)
 
         sb[Reflect.basetype(SizeAlignMismatch)] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, ValidField, Typecheck, ConstructType, CCallArg)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.SizeAlignMismatch")]
         pub struct SizeAlignMismatch {
             #[jlrs(bits_union_align)]
@@ -67,13 +67,13 @@ end
 
     @test begin
         b = Reflect.reflect([UnionInTuple])
-        sb = Reflect.StringWrappers(b)
+        sb = Reflect.StringLayouts(b)
 
         sb[Reflect.basetype(UnionInTuple)] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, ValidField, Typecheck, ConstructType, CCallArg)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.UnionInTuple")]
-        pub struct UnionInTuple<'frame, 'data> {
-            pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'frame, 'data>>,
+        pub struct UnionInTuple<'scope, 'data> {
+            pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'scope, 'data>>,
         }"""
     end
 

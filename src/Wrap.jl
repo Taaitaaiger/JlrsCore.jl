@@ -7,7 +7,7 @@ import Libdl
 
 using Jlrs
 
-export @wrapmodule, @initjlrs
+export @wrapmodule, @initjlrs, AsyncCCall
 
 # Encapsulate information about a function
 mutable struct JlrsFunctionInfo
@@ -18,6 +18,12 @@ mutable struct JlrsFunctionInfo
     julia_return_type::Type
     function_pointer::Ptr{Cvoid}
     override_module::Module
+    async_func::Bool
+end
+
+struct AsyncCCall
+    join_handle::Ptr{Cvoid}
+    join_func::Ptr{Cvoid}
 end
 
 # Type of the key used in the global function list, used to uniquely identify methods
@@ -36,7 +42,7 @@ _method_name_symbol(funcname::Symbol) = (:function, funcname)
 # Return a unique key for the given function, not taking into account the pointer values. This key has to be stable between Julia runs.
 function methodkey(f::JlrsFunctionInfo)
     mhash = UInt(0)
-    for arg in f.ccall_argument_types
+    for arg in f.julia_argument_types
       mhash = hash(arg, mhash)
     end
     mhash = hash(f.julia_return_type, mhash)
@@ -120,10 +126,23 @@ function build_function_expression(func::JlrsFunctionInfo, funcidx, julia_mod)
     # Build the types for the ccall argument list
     c_arg_types = func.ccall_argument_types
     c_return_type = func.ccall_return_type
+    jl_return_type = func.julia_return_type
 
     # Build the final call expression
-    call_exp = quote end
-    push!(call_exp.args, :(@inbounds ccall(__jlrswrap_pointers[$funcidx][1], $c_return_type, ($(c_arg_types...),), $(argsymbols...))))
+    call_exp = if !func.async_func
+        quote
+            @inbounds ccall(__jlrswrap_pointers[$funcidx][1], $c_return_type, ($(c_arg_types...),), $(argsymbols...))
+        end
+    else
+        quote
+            cond = Base.AsyncCondition()
+            GC.@preserve $(argsymbols...) begin
+                async_call = @inbounds ccall(__jlrswrap_pointers[$funcidx][1], $c_return_type, ($(c_arg_types...),), cond.handle, $(argsymbols...))
+                wait(cond)
+                ccall(async_call.join_func, $jl_return_type, (Ptr{Cvoid},), async_call.join_handle)
+            end
+        end
+    end
 
     function argmap(signature)
         result = Expr[]
@@ -134,7 +153,7 @@ function build_function_expression(func::JlrsFunctionInfo, funcidx, julia_mod)
         return result
       end
 
-    function_expression = :($(make_func_declaration((func.name,func.override_module), argmap(argtypes), julia_mod))::$(func.julia_return_type) = $call_exp)
+    function_expression = :($(make_func_declaration((func.name,func.override_module), argmap(argtypes), julia_mod))::$(jl_return_type) = $call_exp)
     return function_expression
 end
 

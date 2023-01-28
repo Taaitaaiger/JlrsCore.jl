@@ -247,6 +247,37 @@ struct Empty end
 
 struct TypedEmpty{T} end
 
+mutable struct HasAtomicField
+    @atomic a::Int32
+end
+
+struct WithInt32
+    int32::Int32
+end
+
+mutable struct HasCustomAtomicField
+    @atomic a::WithInt32
+end
+
+abstract type AnAbstractType end
+abstract type AnAbstractUnionAll{T<:AnAbstractType} end
+
+struct HasAbstractField
+    a::AnAbstractType
+end
+
+struct HasAbstractUnionAllField
+    a::AnAbstractUnionAll
+end
+
+struct HasGenericAbstractField{T<:AnAbstractType}
+    a::T
+end
+
+struct HasGenericAbstractUnionAllField{T<:AnAbstractType, U<:AnAbstractUnionAll{T}}
+    a::U
+end
+
 reflect([
     BitsCharBitsIntChar,
     BitsCharFloat32Float64,
@@ -309,4 +340,13 @@ reflect([
     WithUnion,
     WithUnionAll,
     WithValueType,
+    HasAtomicField,
+    WithInt32,
+    HasCustomAtomicField,
+    AnAbstractType,
+    AnAbstractUnionAll,
+    HasAbstractField,
+    HasAbstractUnionAllField,
+    HasGenericAbstractField,
+    HasGenericAbstractUnionAllField,
 ])

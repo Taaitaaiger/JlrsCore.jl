@@ -2,6 +2,7 @@ module Jlrs
 
 const version = v"0.1.0"
 
+# TODO: Thread-safety
 const color = Ref{Bool}(false)
 
 # The ledger and foreign type registry can't be accessed from Julia, but they're defined here to
@@ -29,6 +30,10 @@ end
 
 # Exception thrown when data can't be borrowed.
 struct BorrowError <: Exception end
+
+struct JlrsError <: Exception 
+    msg::String
+end
 
 # Throwing a Julia exception directly from Rust is generally unsound. A RustResult contains either a
 # value of type T, or an exception. If is_exc is false, the data is converted to T and returned,

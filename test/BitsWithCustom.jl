@@ -11,10 +11,10 @@ end
 @testset "Bits types with custom fields" begin
     @test begin
         b = Reflect.reflect([BitsCharBitsIntChar])
-        sb = Reflect.StringWrappers(b)
+        sb = Reflect.StringLayouts(b)
 
         sb[BitsIntChar] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, ValidField, Typecheck, IntoJulia, ConstructType, CCallArg)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.BitsIntChar")]
         pub struct BitsIntChar {
             pub a: i64,
@@ -22,7 +22,7 @@ end
         }"""
 
         sb[BitsCharBitsIntChar] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, ValidField, Typecheck, IntoJulia, ConstructType, CCallArg)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.BitsCharBitsIntChar")]
         pub struct BitsCharBitsIntChar {
             pub a: ::jlrs::data::layout::char::Char,

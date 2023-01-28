@@ -73,241 +73,241 @@ end
 @testset "Structs with builtin fields" begin
     @test begin
         b = Reflect.reflect([WithArray])
-        sb = Reflect.StringWrappers(b)
+        sb = Reflect.StringLayouts(b)
 
         sb[WithArray] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, ValidField, Typecheck, ConstructType, CCallArg)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.WithArray")]
-        pub struct WithArray<'frame, 'data> {
-            pub a: ::std::option::Option<::jlrs::data::managed::array::ArrayRef<'frame, 'data>>,
+        pub struct WithArray<'scope, 'data> {
+            pub a: ::std::option::Option<::jlrs::data::managed::array::ArrayRef<'scope, 'data>>,
         }"""
     end
 
     @test begin
         b = Reflect.reflect([WithCodeInstance])
-        sb = Reflect.StringWrappers(b)
+        sb = Reflect.StringLayouts(b)
 
         sb[WithCodeInstance] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, ValidField, Typecheck, ConstructType, CCallArg)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.WithCodeInstance")]
-        pub struct WithCodeInstance<'frame, 'data> {
-            pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'frame, 'data>>,
+        pub struct WithCodeInstance<'scope, 'data> {
+            pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'scope, 'data>>,
         }"""
     end
 
     @test begin
         b = Reflect.reflect([WithDataType])
-        sb = Reflect.StringWrappers(b)
+        sb = Reflect.StringLayouts(b)
 
         sb[WithDataType] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, ValidField, Typecheck, ConstructType, CCallArg)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.WithDataType")]
-        pub struct WithDataType<'frame> {
-            pub a: ::std::option::Option<::jlrs::data::managed::datatype::DataTypeRef<'frame>>,
+        pub struct WithDataType<'scope> {
+            pub a: ::std::option::Option<::jlrs::data::managed::datatype::DataTypeRef<'scope>>,
         }"""
     end
 
     @test begin
         b = Reflect.reflect([WithExpr])
-        sb = Reflect.StringWrappers(b)
+        sb = Reflect.StringLayouts(b)
 
         sb[WithExpr] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, ValidField, Typecheck, ConstructType, CCallArg)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.WithExpr")]
-        pub struct WithExpr<'frame, 'data> {
-            pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'frame, 'data>>,
+        pub struct WithExpr<'scope, 'data> {
+            pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'scope, 'data>>,
         }"""
     end
 
     @test begin
         b = Reflect.reflect([WithString])
-        sb = Reflect.StringWrappers(b)
+        sb = Reflect.StringLayouts(b)
 
         sb[WithString] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, ValidField, Typecheck, ConstructType, CCallArg)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.WithString")]
-        pub struct WithString<'frame> {
-            pub a: ::std::option::Option<::jlrs::data::managed::string::StringRef<'frame>>,
+        pub struct WithString<'scope> {
+            pub a: ::std::option::Option<::jlrs::data::managed::string::StringRef<'scope>>,
         }"""
     end
 
     @test begin
         b = Reflect.reflect([WithMethod])
-        sb = Reflect.StringWrappers(b)
+        sb = Reflect.StringLayouts(b)
 
         sb[WithMethod] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, ValidField, Typecheck, ConstructType, CCallArg)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.WithMethod")]
-        pub struct WithMethod<'frame, 'data> {
-            pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'frame, 'data>>,
+        pub struct WithMethod<'scope, 'data> {
+            pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'scope, 'data>>,
         }"""
     end
 
     @test begin
         b = Reflect.reflect([WithMethodInstance])
-        sb = Reflect.StringWrappers(b)
+        sb = Reflect.StringLayouts(b)
 
         sb[WithMethodInstance] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, ValidField, Typecheck, ConstructType, CCallArg)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.WithMethodInstance")]
-        pub struct WithMethodInstance<'frame, 'data> {
-            pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'frame, 'data>>,
+        pub struct WithMethodInstance<'scope, 'data> {
+            pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'scope, 'data>>,
         }"""
     end
 
     @test begin
         b = Reflect.reflect([WithMethodTable])
-        sb = Reflect.StringWrappers(b)
+        sb = Reflect.StringLayouts(b)
 
         sb[WithMethodTable] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, ValidField, Typecheck, ConstructType, CCallArg)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.WithMethodTable")]
-        pub struct WithMethodTable<'frame, 'data> {
-            pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'frame, 'data>>,
+        pub struct WithMethodTable<'scope, 'data> {
+            pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'scope, 'data>>,
         }"""
     end
 
     @test begin
         b = Reflect.reflect([WithModule])
-        sb = Reflect.StringWrappers(b)
+        sb = Reflect.StringLayouts(b)
 
         sb[WithModule] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, ValidField, Typecheck, ConstructType, CCallArg)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.WithModule")]
-        pub struct WithModule<'frame> {
-            pub a: ::std::option::Option<::jlrs::data::managed::module::ModuleRef<'frame>>,
+        pub struct WithModule<'scope> {
+            pub a: ::std::option::Option<::jlrs::data::managed::module::ModuleRef<'scope>>,
         }"""
     end
 
     @test begin
         b = Reflect.reflect([WithSimpleVector])
-        sb = Reflect.StringWrappers(b)
+        sb = Reflect.StringLayouts(b)
 
         sb[WithSimpleVector] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, ValidField, Typecheck, ConstructType, CCallArg)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.WithSimpleVector")]
-        pub struct WithSimpleVector<'frame> {
-            pub a: ::std::option::Option<::jlrs::data::managed::simple_vector::SimpleVectorRef<'frame>>,
+        pub struct WithSimpleVector<'scope> {
+            pub a: ::std::option::Option<::jlrs::data::managed::simple_vector::SimpleVectorRef<'scope>>,
         }"""
     end
 
     @test begin
         b = Reflect.reflect([WithSymbol])
-        sb = Reflect.StringWrappers(b)
+        sb = Reflect.StringLayouts(b)
 
         sb[WithSymbol] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, ValidField, Typecheck, ConstructType, CCallArg)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.WithSymbol")]
-        pub struct WithSymbol<'frame> {
-            pub a: ::std::option::Option<::jlrs::data::managed::symbol::SymbolRef<'frame>>,
+        pub struct WithSymbol<'scope> {
+            pub a: ::std::option::Option<::jlrs::data::managed::symbol::SymbolRef<'scope>>,
         }"""
     end
 
     @test begin
         b = Reflect.reflect([WithTask])
-        sb = Reflect.StringWrappers(b)
+        sb = Reflect.StringLayouts(b)
 
         sb[WithTask] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, ValidField, Typecheck, ConstructType, CCallArg)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.WithTask")]
-        pub struct WithTask<'frame> {
-            pub a: ::std::option::Option<::jlrs::data::managed::task::TaskRef<'frame>>,
+        pub struct WithTask<'scope> {
+            pub a: ::std::option::Option<::jlrs::data::managed::task::TaskRef<'scope>>,
         }"""
     end
 
     @test begin
         b = Reflect.reflect([WithTypeMapEntry])
-        sb = Reflect.StringWrappers(b)
+        sb = Reflect.StringLayouts(b)
 
         sb[WithTypeMapEntry] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, ValidField, Typecheck, ConstructType, CCallArg)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.WithTypeMapEntry")]
-        pub struct WithTypeMapEntry<'frame, 'data> {
-            pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'frame, 'data>>,
+        pub struct WithTypeMapEntry<'scope, 'data> {
+            pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'scope, 'data>>,
         }"""
     end
 
     @test begin
         b = Reflect.reflect([WithTypeMapLevel])
-        sb = Reflect.StringWrappers(b)
+        sb = Reflect.StringLayouts(b)
 
         sb[WithTypeMapLevel] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, ValidField, Typecheck, ConstructType, CCallArg)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.WithTypeMapLevel")]
-        pub struct WithTypeMapLevel<'frame, 'data> {
-            pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'frame, 'data>>,
+        pub struct WithTypeMapLevel<'scope, 'data> {
+            pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'scope, 'data>>,
         }"""
     end
 
     @test begin
         b = Reflect.reflect([WithTypeName])
-        sb = Reflect.StringWrappers(b)
+        sb = Reflect.StringLayouts(b)
 
         sb[WithTypeName] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, ValidField, Typecheck, ConstructType, CCallArg)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.WithTypeName")]
-        pub struct WithTypeName<'frame> {
-            pub a: ::std::option::Option<::jlrs::data::managed::type_name::TypeNameRef<'frame>>,
+        pub struct WithTypeName<'scope> {
+            pub a: ::std::option::Option<::jlrs::data::managed::type_name::TypeNameRef<'scope>>,
         }"""
     end
 
     @test begin
         b = Reflect.reflect([WithTypeVar])
-        sb = Reflect.StringWrappers(b)
+        sb = Reflect.StringLayouts(b)
 
         sb[WithTypeVar] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, ValidField, Typecheck, ConstructType, CCallArg)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.WithTypeVar")]
-        pub struct WithTypeVar<'frame> {
-            pub a: ::std::option::Option<::jlrs::data::managed::type_var::TypeVarRef<'frame>>,
+        pub struct WithTypeVar<'scope> {
+            pub a: ::std::option::Option<::jlrs::data::managed::type_var::TypeVarRef<'scope>>,
         }"""
     end
 
     @test begin
         b = Reflect.reflect([WithUnion])
-        sb = Reflect.StringWrappers(b)
+        sb = Reflect.StringLayouts(b)
 
         sb[WithUnion] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, ValidField, Typecheck, ConstructType, CCallArg)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.WithUnion")]
-        pub struct WithUnion<'frame> {
-            pub a: ::std::option::Option<::jlrs::data::managed::union::UnionRef<'frame>>,
+        pub struct WithUnion<'scope> {
+            pub a: ::std::option::Option<::jlrs::data::managed::union::UnionRef<'scope>>,
         }"""
     end
 
     @test begin
         b = Reflect.reflect([WithUnionAll])
-        sb = Reflect.StringWrappers(b)
+        sb = Reflect.StringLayouts(b)
 
         sb[WithUnionAll] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, ValidField, Typecheck, ConstructType, CCallArg)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.WithUnionAll")]
-        pub struct WithUnionAll<'frame> {
-            pub a: ::std::option::Option<::jlrs::data::managed::union_all::UnionAllRef<'frame>>,
+        pub struct WithUnionAll<'scope> {
+            pub a: ::std::option::Option<::jlrs::data::managed::union_all::UnionAllRef<'scope>>,
         }"""
     end
 
     @test begin
         b = Reflect.reflect([WithCodeInstance]; internaltypes=true)
-        sb = Reflect.StringWrappers(b)
+        sb = Reflect.StringLayouts(b)
 
         sb[WithCodeInstance] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, ValidField, Typecheck, ConstructType, CCallArg)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.WithCodeInstance")]
-        pub struct WithCodeInstance<'frame> {
-            pub a: ::std::option::Option<::jlrs::data::managed::internal::code_instance::CodeInstanceRef<'frame>>,
+        pub struct WithCodeInstance<'scope> {
+            pub a: ::std::option::Option<::jlrs::data::managed::internal::code_instance::CodeInstanceRef<'scope>>,
         }"""
     end
 
     @test begin
         b = Reflect.reflect([WithArray])
-        sb = Reflect.StringWrappers(b)
+        sb = Reflect.StringLayouts(b)
 
         sb[WithArray] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, ValidField, Typecheck, ConstructType, CCallArg)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.WithArray")]
-        pub struct WithArray<'frame, 'data> {
-            pub a: ::std::option::Option<::jlrs::data::managed::array::ArrayRef<'frame, 'data>>,
+        pub struct WithArray<'scope, 'data> {
+            pub a: ::std::option::Option<::jlrs::data::managed::array::ArrayRef<'scope, 'data>>,
         }"""
     end
 
@@ -315,85 +315,85 @@ end
 
     @test begin
         b = Reflect.reflect([WithDataType])
-        sb = Reflect.StringWrappers(b)
+        sb = Reflect.StringLayouts(b)
 
         sb[WithDataType] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, ValidField, Typecheck, ConstructType, CCallArg)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.WithDataType")]
-        pub struct WithDataType<'frame> {
-            pub a: ::std::option::Option<::jlrs::data::managed::datatype::DataTypeRef<'frame>>,
+        pub struct WithDataType<'scope> {
+            pub a: ::std::option::Option<::jlrs::data::managed::datatype::DataTypeRef<'scope>>,
         }"""
     end
 
     @test begin
         b = Reflect.reflect([WithExpr]; internaltypes=true)
-        sb = Reflect.StringWrappers(b)
+        sb = Reflect.StringLayouts(b)
 
         sb[WithExpr] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, ValidField, Typecheck, ConstructType, CCallArg)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.WithExpr")]
-        pub struct WithExpr<'frame> {
-            pub a: ::std::option::Option<::jlrs::data::managed::internal::expr::ExprRef<'frame>>,
+        pub struct WithExpr<'scope> {
+            pub a: ::std::option::Option<::jlrs::data::managed::internal::expr::ExprRef<'scope>>,
         }"""
     end
 
     @test begin
         b = Reflect.reflect([WithMethod]; internaltypes=true)
-        sb = Reflect.StringWrappers(b)
+        sb = Reflect.StringLayouts(b)
 
         sb[WithMethod] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, ValidField, Typecheck, ConstructType, CCallArg)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.WithMethod")]
-        pub struct WithMethod<'frame> {
-            pub a: ::std::option::Option<::jlrs::data::managed::internal::method::MethodRef<'frame>>,
+        pub struct WithMethod<'scope> {
+            pub a: ::std::option::Option<::jlrs::data::managed::internal::method::MethodRef<'scope>>,
         }"""
     end
 
     @test begin
         b = Reflect.reflect([WithMethodInstance]; internaltypes=true)
-        sb = Reflect.StringWrappers(b)
+        sb = Reflect.StringLayouts(b)
 
         sb[WithMethodInstance] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, ValidField, Typecheck, ConstructType, CCallArg)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.WithMethodInstance")]
-        pub struct WithMethodInstance<'frame> {
-            pub a: ::std::option::Option<::jlrs::data::managed::internal::method_instance::MethodInstanceRef<'frame>>,
+        pub struct WithMethodInstance<'scope> {
+            pub a: ::std::option::Option<::jlrs::data::managed::internal::method_instance::MethodInstanceRef<'scope>>,
         }"""
     end
 
     @test begin
         b = Reflect.reflect([WithMethodTable]; internaltypes=true)
-        sb = Reflect.StringWrappers(b)
+        sb = Reflect.StringLayouts(b)
 
         sb[WithMethodTable] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, ValidField, Typecheck, ConstructType, CCallArg)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.WithMethodTable")]
-        pub struct WithMethodTable<'frame> {
-            pub a: ::std::option::Option<::jlrs::data::managed::internal::method_table::MethodTableRef<'frame>>,
+        pub struct WithMethodTable<'scope> {
+            pub a: ::std::option::Option<::jlrs::data::managed::internal::method_table::MethodTableRef<'scope>>,
         }"""
     end
 
     @test begin
         b = Reflect.reflect([WithTypeMapEntry]; internaltypes=true)
-        sb = Reflect.StringWrappers(b)
+        sb = Reflect.StringLayouts(b)
 
         sb[WithTypeMapEntry] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, ValidField, Typecheck, ConstructType, CCallArg)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.WithTypeMapEntry")]
-        pub struct WithTypeMapEntry<'frame> {
-            pub a: ::std::option::Option<::jlrs::data::managed::internal::typemap_entry::TypeMapEntryRef<'frame>>,
+        pub struct WithTypeMapEntry<'scope> {
+            pub a: ::std::option::Option<::jlrs::data::managed::internal::typemap_entry::TypeMapEntryRef<'scope>>,
         }"""
     end
 
     @test begin
         b = Reflect.reflect([WithTypeMapLevel]; internaltypes=true)
-        sb = Reflect.StringWrappers(b)
+        sb = Reflect.StringLayouts(b)
 
         sb[WithTypeMapLevel] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, ValidField, Typecheck, ConstructType, CCallArg)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.WithTypeMapLevel")]
-        pub struct WithTypeMapLevel<'frame> {
-            pub a: ::std::option::Option<::jlrs::data::managed::internal::typemap_level::TypeMapLevelRef<'frame>>,
+        pub struct WithTypeMapLevel<'scope> {
+            pub a: ::std::option::Option<::jlrs::data::managed::internal::typemap_level::TypeMapLevelRef<'scope>>,
         }"""
     end
 end

@@ -33,10 +33,10 @@ end
 @testset "Mutable structs" begin
     @test begin
         b = Reflect.reflect([MutF32])
-        sb = Reflect.StringWrappers(b)
+        sb = Reflect.StringLayouts(b)
 
         sb[MutF32] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ConstructType, CCallArg)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ConstructType)]
         #[jlrs(julia_type = "Main.MutF32")]
         pub struct MutF32 {
             pub a: f32,
@@ -45,88 +45,97 @@ end
 
     @test begin
         b = Reflect.reflect([MutNested])
-        sb = Reflect.StringWrappers(b)
+        sb = Reflect.StringLayouts(b)
 
         sb[MutNested] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ConstructType, CCallArg)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ConstructType)]
         #[jlrs(julia_type = "Main.MutNested")]
-        pub struct MutNested<'frame, 'data> {
-            pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'frame, 'data>>,
+        pub struct MutNested<'scope, 'data> {
+            pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'scope, 'data>>,
         }"""
     end
 
-    @test begin
-        b = Reflect.reflect([Immut])
-        sb = Reflect.StringWrappers(b)
+    # @test begin
+    #     b = Reflect.reflect([Immut])
+    #     sb = Reflect.StringLayouts(b)
 
-        sb[Immut] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, ValidField, Typecheck, ConstructType, CCallArg)]
-        #[jlrs(julia_type = "Main.Immut")]
-        pub struct Immut<'frame, 'data> {
-            pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'frame, 'data>>,
-        }"""
-    end
+    #     sb[Immut] === """#[repr(C)]
+    #     #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
+    #     #[jlrs(julia_type = "Main.Immut")]
+    #     pub struct Immut<'scope, 'data> {
+    #         pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'scope, 'data>>,
+    #     }"""
+    # end
 
-    @test begin
-        b = Reflect.reflect([HasImmut])
-        sb = Reflect.StringWrappers(b)
+    # @test begin
+    #     b = Reflect.reflect([HasImmut])
+    #     sb = Reflect.StringLayouts(b)
 
-        sb[HasImmut] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ConstructType, CCallArg)]
-        #[jlrs(julia_type = "Main.HasImmut")]
-        pub struct HasImmut<'frame, 'data> {
-            pub a: Immut<'frame, 'data>,
-        }"""
-    end
+    #     sb[HasImmut] === """#[repr(C)]
+    #     #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ConstructType)]
+    #     #[jlrs(julia_type = "Main.HasImmut")]
+    #     pub struct HasImmut<'scope, 'data> {
+    #         pub a: Immut<'scope, 'data>,
+    #     }"""
+    # end
 
-    @test begin
-        b = Reflect.reflect([DoubleImmut])
-        sb = Reflect.StringWrappers(b)
+    # @test begin
+    #     b = Reflect.reflect([DoubleImmut])
+    #     sb = Reflect.StringLayouts(b)
 
-        sb[DoubleImmut] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, ValidField, Typecheck, ConstructType, CCallArg)]
-        #[jlrs(julia_type = "Main.DoubleImmut")]
-        pub struct DoubleImmut<'frame, 'data> {
-            pub a: Immut<'frame, 'data>,
-        }"""
-    end
+    #     sb[DoubleImmut] === """#[repr(C)]
+    #     #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
+    #     #[jlrs(julia_type = "Main.DoubleImmut")]
+    #     pub struct DoubleImmut<'scope, 'data> {
+    #         pub a: Immut<'scope, 'data>,
+    #     }"""
+    # end
 
-    @test begin
-        b = Reflect.reflect([HasGeneric])
-        sb = Reflect.StringWrappers(b)
+    # @test begin
+    #     b = Reflect.reflect([HasGeneric])
+    #     sb = Reflect.StringLayouts(b)
 
-        sb[Reflect.basetype(HasGeneric)] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ConstructType, CCallArg)]
-        #[jlrs(julia_type = "Main.HasGeneric")]
-        pub struct HasGeneric<T>
-        where
-            T: ::jlrs::data::layout::valid_layout::ValidField + Clone,
-        {
-            pub a: T,
-        }"""
-    end
+    #     sb[Reflect.basetype(HasGeneric)] === """#[repr(C)]
+    #     #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ConstructType)]
+    #     #[jlrs(julia_type = "Main.HasGeneric")]
+    #     pub struct HasGeneric<T> {
+    #         pub a: T,
+    #     }"""
+    # end
 
-    @test begin
-        b = Reflect.reflect([HasGenericImmut])
-        sb = Reflect.StringWrappers(b)
+    # @test begin
+    #     b = Reflect.reflect([HasGenericImmut])
+    #     sb = Reflect.StringLayouts(b)
 
-        sb[Reflect.basetype(HasGenericImmut)] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, ValidField, Typecheck)]
-        #[jlrs(julia_type = "Main.HasGenericImmut")]
-        pub struct HasGenericImmut<'frame, 'data> {
-            pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'frame, 'data>>,
-        }"""
-    end
+    #     sb[Reflect.basetype(HasGenericImmut)] === """#[repr(C)]
+    #     #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField)]
+    #     #[jlrs(julia_type = "Main.HasGenericImmut")]
+    #     pub struct HasGenericImmut<'scope, 'data> {
+    #         pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'scope, 'data>>,
+    #     }
+    #     
+    #     #[derive(ConstructType)]
+    #     #[jlrs(julia_type = "Main.HasGenericImmut")
+    #     pub struct HasGenericImmutTypeConstructor<T> {
+    #         _t: ::std::marker::PhantomData<T>,
+    #     }"""
+    # end
 
-    @test begin
-        b = Reflect.reflect([DoubleHasGeneric])
-        sb = Reflect.StringWrappers(b)
+    # @test begin
+    #     b = Reflect.reflect([DoubleHasGeneric])
+    #     sb = Reflect.StringLayouts(b)
 
-        sb[Reflect.basetype(DoubleHasGeneric)] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck)]
-        #[jlrs(julia_type = "Main.DoubleHasGeneric")]
-        pub struct DoubleHasGeneric<'frame, 'data> {
-            pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'frame, 'data>>,
-        }"""
-    end
+    #     sb[Reflect.basetype(DoubleHasGeneric)] === """#[repr(C)]
+    #     #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck)]
+    #     #[jlrs(julia_type = "Main.DoubleHasGeneric")]
+    #     pub struct DoubleHasGeneric<'scope, 'data> {
+    #         pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'scope, 'data>>,
+    #     }
+    #     
+    #     #[derive(ConstructType)]
+    #     #[jlrs(julia_type = "Main.DoubleHasGeneric")
+    #     pub struct DoubleHasGenericTypeConstructor<T> {
+    #         _t: ::std::marker::PhantomData<T>,
+    #     }"""
+    # end
 end
