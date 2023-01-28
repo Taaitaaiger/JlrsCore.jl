@@ -40,7 +40,9 @@ end
 Layouts for types used as fields and type parameters are automatically generated. If you want or need to rename structs or their fields you can use `renamestruct!` and `renamefields!` as follows:
 
 ```julia
-layouts = JlrsReflect.reflect([TypeA, TypeB, ...])
+using Jlrs.Reflect
+
+layouts = reflect([TypeA, TypeB, ...])
 renamestruct!(layouts, TypeA, "StructA")
 renamefields!(layouts, TypeB, [:fielda => "field_a", :fieldb => "field_b"])
 ```

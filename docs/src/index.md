@@ -40,7 +40,7 @@ end
 Layouts for types used as fields and type parameters are automatically generated. If you want or need to rename structs or their fields you can use `renamestruct!` and `renamefields!` as follows:
 
 ```julia
-layouts = JlrsReflect.reflect([TypeA, TypeB, ...])
+layouts = Jlrs.Reflect.reflect([TypeA, TypeB, ...])
 renamestruct!(layouts, TypeA, "StructA")
 renamefields!(layouts, TypeB, [:fielda => "field_a", :fieldb => "field_b"])
 ```
@@ -73,7 +73,7 @@ After the crate has been built (NB: the crate type must have been set to `cdylib
 module Example
 using Jlrs.Wrap
 
-@wrapmodule("../relative/path/to/libexample", :module_init_fn)
+@wrapmodule("path/to/libexample", :module_init_fn)
 
 function __init__()
   @initjlrs
