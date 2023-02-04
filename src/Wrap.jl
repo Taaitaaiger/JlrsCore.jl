@@ -4,8 +4,8 @@ module Wrap
 # https://github.com/JuliaInterop/CxxWrap.jl/blob/709c18788fec41ef27d034c33d53aa21742c147c/src/CxxWrap.jl
 
 import Libdl
-
-using Jlrs
+import Jlrs
+import Base.Docs: Binding, docstr, doc!
 
 export @wrapmodule, @initjlrs, AsyncCCall
 
@@ -24,6 +24,18 @@ end
 struct AsyncCCall
     join_handle::Ptr{Cvoid}
     join_func::Ptr{Cvoid}
+end
+
+struct DocItem
+    mod::Module
+    item::Symbol
+    signature
+    doc::String
+end
+
+struct JlrsModuleInfo
+    func_info::Vector{JlrsFunctionInfo}
+    docs::Vector{DocItem}
 end
 
 # Type of the key used in the global function list, used to uniquely identify methods
@@ -83,7 +95,7 @@ function _get_function_pointer(mkey)
     return __global_method_map[mkey]
 end
 
-function register_julia_module(mod::Module, fptr::Ptr{Cvoid}, precompiling::UInt8)::Union{Nothing, Array{JlrsFunctionInfo, 1}}
+function register_julia_module(mod::Module, fptr::Ptr{Cvoid}, precompiling::UInt8)::Union{Nothing, JlrsModuleInfo}
     ccall(fptr, Any, (Any, UInt8), mod, precompiling)
 end
 
@@ -91,14 +103,14 @@ function initialize_julia_module(mod::Module)
     lib = Libdl.dlopen(mod.__jlrswrap_sopath, mod.__jlrswrap_flags)
 
     fptr = Libdl.dlsym(lib, mod.__jlrswrap_init_func)
-    funcs = register_julia_module(mod, fptr, 0x0)
-    if isnothing(funcs)
+    modinfo = register_julia_module(mod, fptr, 0x0)
+    if isnothing(modinfo)
         return
     end
 
     precompiling = false
 
-    for func in funcs
+    for func in modinfo.func_info
         _register_function_pointers(func, precompiling)
     end
 
@@ -176,7 +188,17 @@ function wrap_functions(functions, julia_mod)
     end
 end
 
-function wrapmodule(so_path::AbstractString, init_fn_name, m::Module, flags)
+function generate_docs(filename, doc_items::Vector{DocItem})
+    for item in doc_items
+        binding = Binding(item.mod, item.item)
+        docstring = docstr(item.doc)
+        docstring.data[:path] = filename
+        docstring.data[:module] = item.mod
+        doc!(item.mod, binding, docstring, item.signature)
+    end
+end
+
+function wrapmodule(so_path::AbstractString, init_fn_name, m::Module, filename, flags)
     if isdefined(m, :__jlrswrap_methodkeys)
         return
     end
@@ -194,29 +216,30 @@ function wrapmodule(so_path::AbstractString, init_fn_name, m::Module, flags)
     Core.eval(m, :(const __jlrswrap_flags = $flags))
 
     fptr = Libdl.dlsym(Libdl.dlopen(so_path, flags), init_funcname)
-    funcs = register_julia_module(m, fptr, 0x1)
-    if isnothing(funcs)
+    modinfo = register_julia_module(m, fptr, 0x1)
+    if isnothing(modinfo)
         return
     end
 
-    wrap_functions(funcs, m)
+    wrap_functions(modinfo.func_info, m)
+    generate_docs(filename, modinfo.docs)
 end
 
 """
     @wrapmodule libraryfile init_fn_name [flags]
 
-Place the functions, foreign types, constants, and globals exported by the Rust library into the 
-module enclosing this macro call by calling an entrypoint named `init_fn_name`. This entrypoint 
+Place the functions, exported types, constants, and globals exported by the Rust library into the
+module enclosing this macro call by calling an entrypoint named `init_fn_name`. This entrypoint
 must have been generated with the `julia_module` macro provided by the jlrs crate.
 """
 macro wrapmodule(libraryfile, init_fn_name, flags=:(nothing))
-    return :(wrapmodule($(esc(libraryfile)), $(esc(init_fn_name)),$__module__, $(esc(flags))))
+    return :(wrapmodule($(esc(libraryfile)), $(esc(init_fn_name)),$__module__, @__FILE__, $(esc(flags))))
 end
 
 """
     @initjlrs
 
-Initialize the Rust function pointer tables in a precompiled module and reinitialize foreign 
+Initialize the Rust function pointer tables in a precompiled module and reinitialize exported
 types. Must be called from within `__init__` in the wrapped module.
 """
 macro initjlrs()

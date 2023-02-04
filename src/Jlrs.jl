@@ -31,7 +31,8 @@ end
 # Exception thrown when data can't be borrowed.
 struct BorrowError <: Exception end
 
-struct JlrsError <: Exception 
+# Exception thrown when a `JlrsError`` is returned from an exported Rust function.
+struct JlrsError <: Exception
     msg::String
 end
 
@@ -84,7 +85,7 @@ function init_ledger(func::Ptr{Cvoid})
 end
 
 # Calls the function that initializes foreign_type_registry, the function is implemented in Rust:
-# ::jlrs::data::layout::foreign::init_foreign_type_registry
+# ::jlrs::data::types::foreign::init_foreign_type_registry
 function init_foreign_type_registry(func::Ptr{Cvoid})
     @lock init_lock begin
         ccall(func, Cvoid, (Any,), foreign_type_registry)

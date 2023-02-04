@@ -55,87 +55,87 @@ end
         }"""
     end
 
-    # @test begin
-    #     b = Reflect.reflect([Immut])
-    #     sb = Reflect.StringLayouts(b)
+    @test begin
+        b = Reflect.reflect([Immut])
+        sb = Reflect.StringLayouts(b)
 
-    #     sb[Immut] === """#[repr(C)]
-    #     #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
-    #     #[jlrs(julia_type = "Main.Immut")]
-    #     pub struct Immut<'scope, 'data> {
-    #         pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'scope, 'data>>,
-    #     }"""
-    # end
+        sb[Immut] === """#[repr(C)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
+        #[jlrs(julia_type = "Main.Immut")]
+        pub struct Immut<'scope, 'data> {
+            pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'scope, 'data>>,
+        }"""
+    end
 
-    # @test begin
-    #     b = Reflect.reflect([HasImmut])
-    #     sb = Reflect.StringLayouts(b)
+    @test begin
+        b = Reflect.reflect([HasImmut])
+        sb = Reflect.StringLayouts(b)
 
-    #     sb[HasImmut] === """#[repr(C)]
-    #     #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ConstructType)]
-    #     #[jlrs(julia_type = "Main.HasImmut")]
-    #     pub struct HasImmut<'scope, 'data> {
-    #         pub a: Immut<'scope, 'data>,
-    #     }"""
-    # end
+        sb[HasImmut] === """#[repr(C)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ConstructType)]
+        #[jlrs(julia_type = "Main.HasImmut")]
+        pub struct HasImmut<'scope, 'data> {
+            pub a: Immut<'scope, 'data>,
+        }"""
+    end
 
-    # @test begin
-    #     b = Reflect.reflect([DoubleImmut])
-    #     sb = Reflect.StringLayouts(b)
+    @test begin
+        b = Reflect.reflect([DoubleImmut])
+        sb = Reflect.StringLayouts(b)
 
-    #     sb[DoubleImmut] === """#[repr(C)]
-    #     #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
-    #     #[jlrs(julia_type = "Main.DoubleImmut")]
-    #     pub struct DoubleImmut<'scope, 'data> {
-    #         pub a: Immut<'scope, 'data>,
-    #     }"""
-    # end
+        sb[DoubleImmut] === """#[repr(C)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
+        #[jlrs(julia_type = "Main.DoubleImmut")]
+        pub struct DoubleImmut<'scope, 'data> {
+            pub a: Immut<'scope, 'data>,
+        }"""
+    end
 
-    # @test begin
-    #     b = Reflect.reflect([HasGeneric])
-    #     sb = Reflect.StringLayouts(b)
+    @test begin
+        b = Reflect.reflect([HasGeneric])
+        sb = Reflect.StringLayouts(b)
 
-    #     sb[Reflect.basetype(HasGeneric)] === """#[repr(C)]
-    #     #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ConstructType)]
-    #     #[jlrs(julia_type = "Main.HasGeneric")]
-    #     pub struct HasGeneric<T> {
-    #         pub a: T,
-    #     }"""
-    # end
+        sb[Reflect.basetype(HasGeneric)] === """#[repr(C)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ConstructType)]
+        #[jlrs(julia_type = "Main.HasGeneric")]
+        pub struct HasGeneric<T> {
+            pub a: T,
+        }"""
+    end
 
-    # @test begin
-    #     b = Reflect.reflect([HasGenericImmut])
-    #     sb = Reflect.StringLayouts(b)
+    @test begin
+        b = Reflect.reflect([HasGenericImmut])
+        sb = Reflect.StringLayouts(b)
 
-    #     sb[Reflect.basetype(HasGenericImmut)] === """#[repr(C)]
-    #     #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField)]
-    #     #[jlrs(julia_type = "Main.HasGenericImmut")]
-    #     pub struct HasGenericImmut<'scope, 'data> {
-    #         pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'scope, 'data>>,
-    #     }
-    #     
-    #     #[derive(ConstructType)]
-    #     #[jlrs(julia_type = "Main.HasGenericImmut")
-    #     pub struct HasGenericImmutTypeConstructor<T> {
-    #         _t: ::std::marker::PhantomData<T>,
-    #     }"""
-    # end
+        sb[Reflect.basetype(HasGenericImmut)] === """#[repr(C)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField)]
+        #[jlrs(julia_type = "Main.HasGenericImmut")]
+        pub struct HasGenericImmut<'scope, 'data> {
+            pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'scope, 'data>>,
+        }
 
-    # @test begin
-    #     b = Reflect.reflect([DoubleHasGeneric])
-    #     sb = Reflect.StringLayouts(b)
+        #[derive(ConstructType)]
+        #[jlrs(julia_type = "Main.HasGenericImmut")]
+        pub struct HasGenericImmutTypeConstructor<T> {
+            _t: ::std::marker::PhantomData<T>,
+        }"""
+    end
 
-    #     sb[Reflect.basetype(DoubleHasGeneric)] === """#[repr(C)]
-    #     #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck)]
-    #     #[jlrs(julia_type = "Main.DoubleHasGeneric")]
-    #     pub struct DoubleHasGeneric<'scope, 'data> {
-    #         pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'scope, 'data>>,
-    #     }
-    #     
-    #     #[derive(ConstructType)]
-    #     #[jlrs(julia_type = "Main.DoubleHasGeneric")
-    #     pub struct DoubleHasGenericTypeConstructor<T> {
-    #         _t: ::std::marker::PhantomData<T>,
-    #     }"""
-    # end
+    @test begin
+        b = Reflect.reflect([DoubleHasGeneric])
+        sb = Reflect.StringLayouts(b)
+
+        sb[Reflect.basetype(DoubleHasGeneric)] === """#[repr(C)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck)]
+        #[jlrs(julia_type = "Main.DoubleHasGeneric")]
+        pub struct DoubleHasGeneric<'scope, 'data> {
+            pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'scope, 'data>>,
+        }
+
+        #[derive(ConstructType)]
+        #[jlrs(julia_type = "Main.DoubleHasGeneric")]
+        pub struct DoubleHasGenericTypeConstructor<T> {
+            _t: ::std::marker::PhantomData<T>,
+        }"""
+    end
 end

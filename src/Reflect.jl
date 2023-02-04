@@ -113,22 +113,22 @@ end
     reflect(types::Vector{<:Type}; f16::Bool=false, internaltypes::Bool=false)::Layouts
 
 Generate Rust layouts and type constructors for all types in `types` and their dependencies. The
-only requirement is that these types must not contain any union or tuple fields that directly 
+only requirement is that these types must not contain any union or tuple fields that directly
 depend on a type parameter.
 
 A layout is a Rust type whose layout exactly matches the layout of the Julia type it's reflected
 from. Layous are generated for the most general case by erasing the content of all provided type
-parameters, so you can't avoid the restrictions regarding union and tuple fields with type 
+parameters, so you can't avoid the restrictions regarding union and tuple fields with type
 parameters by explicitly providing a more qualified type. The only effect qualifying types has, is
-that layouts for the used parameters will also be generated. If a type parameter doesn't affect 
+that layouts for the used parameters will also be generated. If a type parameter doesn't affect
 its layout it's elided from the generated layout.
 
-Layouts automatically derive a bunch of traits to enable using them with jlrs. The following 
+Layouts automatically derive a bunch of traits to enable using them with jlrs. The following
 traits will be implemented as long as their requirements are met:
 
 - `Clone` and `Debug` are always derived.
 
-- `ValidLayout` is always derived, enables checking if the layout of a Julia type is compatible 
+- `ValidLayout` is always derived, enables checking if the layout of a Julia type is compatible
   with that Rust type.
 
 - `Typecheck` is always derived, calls `ValidLayout::valid_layout`.
@@ -136,20 +136,20 @@ traits will be implemented as long as their requirements are met:
 - `Unbox` is always derived, enables converting Julia data to an instance of this type by casting
   and dereferencing the internal pointer of a `Value`.
 
-- `ValidField` is derived if this type is stored inline when used as a field type, which is 
-  generally the case if the Julia type is immutable and concrete. `ValidLayout` and `ValidField` 
+- `ValidField` is derived if this type is stored inline when used as a field type, which is
+  generally the case if the Julia type is immutable and concrete. `ValidLayout` and `ValidField`
   are implemented by calling `ValidField::valid_field` for each field.
 
 - `IntoJulia` is derived if the type is an isbits type with no type parameters, enables converting
   data of that type directly to a `Value` with `Value::new`.
 
-- `ConstructType` is derived if no type parameters have been elided, if it does have elided 
+- `ConstructType` is derived if no type parameters have been elided, if it does have elided
   parameters, a zero-sized struct named `{type_name}TypeConstructor` is generated which elides no
   parameters and derives nothing but this trait. This trait enables the Julia type associated with
-  the Rust type to be constructed without depending on any existing data. 
+  the Rust type to be constructed without depending on any existing data.
 
 - `CCallArg` and `CCallReturn` are derived if the type is immutable, these types can be used in
-  argument and return positions with Rust functions that are called from Julia through `ccall`. 
+  argument and return positions with Rust functions that are called from Julia through `ccall`.
 
 Some types are only available in jlrs if the `internal-types` feature is enabled, if you've
 enabled this feature you can set the `internaltypes` keyword argument to `true` to make use of
@@ -188,13 +188,13 @@ function reflect(types::Vector{<:Type}; f16::Bool=false, internaltypes::Bool=fal
         extractdeps!(deps, ty, layouts)
     end
 
-    # Topologically sort all types so every layout the current type depends on has already been 
+    # Topologically sort all types so every layout the current type depends on has already been
     # generated
     for ty in toposort!(deps)
         createlayout!(layouts, ty)
     end
 
-    # If any of the fields of a generated layout contain a parameter with lifetimes, these 
+    # If any of the fields of a generated layout contain a parameter with lifetimes, these
     # lifetimes must be propagated to the layout's parameters.
     propagate_internal_param_lifetimes!(layouts)
     Layouts(layouts)
