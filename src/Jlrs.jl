@@ -10,6 +10,34 @@ const color = Ref{Bool}(false)
 # different packages.
 const foreign_type_registry = Ref{Ptr{Cvoid}}(C_NULL)
 const ledger = Ref{Ptr{Cvoid}}(C_NULL)
+const pool = Ref{Ptr{Cvoid}}(C_NULL)
+const pool_size = Ref{UInt}(0x0)
+const set_pool_size_fn = Ref{Ptr{Cvoid}}(C_NULL)
+
+"""
+    set_pool_size(size)
+
+Sets the size of the internal thread pool. If it's set to 0, it will default to the number of CPU 
+threads. This function does nothing if the pool doesn't exist or the size of the pool is set to 
+its current value. No actively running threads are killed.
+"""
+function set_pool_size(size::Unsigned)
+    size = UInt(size)
+    if pool_size[] == size
+        return
+    end
+
+    pool_size[] = size
+    set_pool_size_fn_ptr = set_pool_size_fn[]
+    pool_ptr = set_pool_size_fn[]
+    if pool_ptr == C_NULL || set_pool_size_fn_ptr == C_NULL
+        return
+    end
+
+    ccall(set_pool_size_fn_ptr, Cvoid, (UInt, ), size)
+end
+
+export set_pool_size
 
 using Base: @lock
 import Base: convert
@@ -89,6 +117,14 @@ end
 function init_foreign_type_registry(func::Ptr{Cvoid})
     @lock init_lock begin
         ccall(func, Cvoid, (Any,), foreign_type_registry)
+    end
+end
+
+# Calls the function that initializes the thread pool, the function is implemented in Rust:
+# ::jlrs::ccall::init_thread_pool
+function init_thread_pool(func::Ptr{Cvoid})
+    @lock init_lock begin
+        ccall(func, Cvoid, (Any, UInt, Any), pool, pool_size[], set_pool_size_fn)
     end
 end
 
