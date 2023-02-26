@@ -18,7 +18,6 @@ jobs:
           - 'nightly'
         os:
           - ubuntu-latest
-          - macOS-latest
           - windows-latest
     steps:
       - uses: actions/checkout@v2
