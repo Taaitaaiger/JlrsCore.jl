@@ -86,3 +86,12 @@ end
 ```@autodocs
 Modules = [Jlrs.Wrap]
 ```
+
+
+## Ledger
+
+Jlrs uses a ledger to track whether Julia data is currently borrowed. By tracking this information, it's safer to access data from Rust because it enforces Rust's borrowing rules at runtime. While this is mostly used internally, you can make use of this functionality from Julia to prevent data you're actively using in Julia to be accessed incorrectly from Rust.
+
+```@autodocs
+Modules = [Jlrs.Ledger]
+```

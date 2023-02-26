@@ -5,39 +5,51 @@ const version = v"0.1.0"
 # TODO: Thread-safety
 const color = Ref{Bool}(false)
 
-# The ledger and foreign type registry can't be accessed from Julia, but they're defined here to
-# ensure that this information is globally shared even if multiple copies of jlrs are used in
-# different packages.
-const foreign_type_registry = Ref{Ptr{Cvoid}}(C_NULL)
-const ledger = Ref{Ptr{Cvoid}}(C_NULL)
-const pool = Ref{Ptr{Cvoid}}(C_NULL)
-const pool_size = Ref{UInt}(0x0)
-const set_pool_size_fn = Ref{Ptr{Cvoid}}(C_NULL)
+struct Pool
+    set_pool_size_fn::Ptr{Cvoid}
+end
+
+const pools = Dict{Module, Pool}()
+const init_lock = ReentrantLock()
 
 """
-    set_pool_size(size)
+    set_pool_size(mod, size)
 
-Sets the size of the internal thread pool. If it's set to 0, it will default to the number of CPU 
-threads. This function does nothing if the pool doesn't exist or the size of the pool is set to 
-its current value. No actively running threads are killed.
+Sets the size of the thread pool if one is available for the module. A module has a thread pool
+if it was created with jlrs' `julia_module` macro, the pool is used to execute callbacks without
+blocking Julia.
+
+The size of the pool must be larger than 0, otherwise an `ArgumentError` is thrown. If no pool is
+known for the module, a `KeyError` is thrown. No active threads are killed by calling this
+function.
 """
-function set_pool_size(size::Unsigned)
-    size = UInt(size)
-    if pool_size[] == size
-        return
+function set_pool_size(mod::Module, size::Unsigned)
+    if size == 0
+        throw(ArgumentError("size must be greater than 0"))
     end
 
-    pool_size[] = size
-    set_pool_size_fn_ptr = set_pool_size_fn[]
-    pool_ptr = set_pool_size_fn[]
-    if pool_ptr == C_NULL || set_pool_size_fn_ptr == C_NULL
-        return
+    @lock init_lock begin
+        set_pool_size_fn = pools[mod].set_pool_size_fn
+        ccall(set_pool_size_fn, Cvoid, (UInt, ), size)
     end
 
-    ccall(set_pool_size_fn_ptr, Cvoid, (UInt, ), size)
+    nothing
 end
 
 export set_pool_size
+
+function add_pool(mod::Module, set_pool_size_fn::Ptr{Cvoid})
+    @lock init_lock begin
+        if haskey(pools, mod)
+            throw(ErrorException("Pool for module $mod already exists"))
+        end
+
+        pools[mod] = Pool(set_pool_size_fn)
+    end
+
+    nothing
+end
+
 
 using Base: @lock
 import Base: convert
@@ -102,31 +114,6 @@ function add_to_loaded_packages(pkg_id)
     @lock package_lock loaded_packages[Symbol(pkg_id.name)] = Base.root_module(pkg_id)
 end
 
-const init_lock = ReentrantLock()
-
-# Calls the function that initializes ledger, the function is implemented in Rust:
-# ::jlrs::memory::ledger::init_ledger
-function init_ledger(func::Ptr{Cvoid})
-    @lock init_lock begin
-        ccall(func, Cvoid, (Any,), ledger)
-    end
-end
-
-# Calls the function that initializes foreign_type_registry, the function is implemented in Rust:
-# ::jlrs::data::types::foreign::init_foreign_type_registry
-function init_foreign_type_registry(func::Ptr{Cvoid})
-    @lock init_lock begin
-        ccall(func, Cvoid, (Any,), foreign_type_registry)
-    end
-end
-
-# Calls the function that initializes the thread pool, the function is implemented in Rust:
-# ::jlrs::ccall::init_thread_pool
-function init_thread_pool(func::Ptr{Cvoid})
-    @lock init_lock begin
-        ccall(func, Cvoid, (Any, UInt, Any), pool, pool_size[], set_pool_size_fn)
-    end
-end
 
 # Called from Rust to ensure the `Stack` type is only created once.
 function lock_init_lock()
@@ -144,6 +131,7 @@ else
     include("Threads-6-8.jl")
 end
 
+include("Ledger.jl")
 include("Reflect.jl")
 
 include("Wrap.jl")
