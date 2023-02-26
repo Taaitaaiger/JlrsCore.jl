@@ -1,5 +1,8 @@
 module Jlrs
 
+using Base: @lock
+import Base: convert
+
 const version = v"0.1.0"
 
 # TODO: Thread-safety
@@ -49,10 +52,6 @@ function add_pool(mod::Module, set_pool_size_fn::Ptr{Cvoid})
 
     nothing
 end
-
-
-using Base: @lock
-import Base: convert
 
 # Call show and write the output to a string.
 function valuestring(value)::String
