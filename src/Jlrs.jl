@@ -2,6 +2,7 @@ module Jlrs
 
 using Base: @lock
 import Base: convert
+export set_pool_size, BorrowError, JlrsError, RustResult
 
 const version = v"0.1.0"
 
@@ -39,8 +40,6 @@ function set_pool_size(mod::Module, size::Unsigned)
     nothing
 end
 
-export set_pool_size
-
 function add_pool(mod::Module, set_pool_size_fn::Ptr{Cvoid})
     @lock init_lock begin
         if haskey(pools, mod)
@@ -67,17 +66,31 @@ function errorstring(value)::String
     String(take!(io))
 end
 
-# Exception thrown when data can't be borrowed.
+"""
+Exception thrown when data can't be borrowed.
+"""
 struct BorrowError <: Exception end
 
-# Exception thrown when a `JlrsError`` is returned from an exported Rust function.
+"""
+Exception thrown when a `JlrsError` is returned from an exported Rust function.
+"""
 struct JlrsError <: Exception
     msg::String
 end
 
-# Throwing a Julia exception directly from Rust is generally unsound. A RustResult contains either a
-# value of type T, or an exception. If is_exc is false, the data is converted to T and returned,
-# otherwise the exception is thrown.
+"""
+A pending exception.
+
+Throwing a Julia exception directly from Rust is generally unsound. A RustResult contains either a
+value of type T, or an exception. If is_exc is false, the data is converted to T and returned,
+otherwise the exception is thrown.
+
+Sometimes this conversion is ambiguous. This can typically be solved by providing a custom
+implementation of `convert`, which can be implemented as 
+`Base.convert(::Type{T}, data::RustResult{T}) = data()`
+where T has to be replaced with the problematic type. When this error occurs, the correct 
+signature is part of the error message.
+"""
 mutable struct RustResult{T}
     data
     is_exc::Bool
@@ -85,6 +98,7 @@ end
 
 convert(::Type{T}, data::RustResult{T}) where T = data()
 convert(::Type{Nothing}, data::Jlrs.RustResult{Nothing}) = data()
+convert(::Type{Any}, data::Jlrs.RustResult{Any}) = data()
 
 function (res::RustResult{T})() where T
     if res.is_exc

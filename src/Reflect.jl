@@ -129,27 +129,30 @@ traits will be implemented as long as their requirements are met:
 - `Clone` and `Debug` are always derived.
 
 - `ValidLayout` is always derived, enables checking if the layout of a Julia type is compatible
-  with that Rust type.
-
-- `Typecheck` is always derived, calls `ValidLayout::valid_layout`.
+  with that Rust type. `Typecheck` is always derived, and is implemented as a call to
+  `ValidLayout::valid_layout`.
 
 - `Unbox` is always derived, enables converting Julia data to an instance of this type by casting
-  and dereferencing the internal pointer of a `Value`.
+  and dereferencing the internal pointer of a `Value`, and then cloning the contents.
 
 - `ValidField` is derived if this type is stored inline when used as a field type, which is
   generally the case if the Julia type is immutable and concrete. `ValidLayout` and `ValidField`
   are implemented by calling `ValidField::valid_field` for each field.
 
-- `IntoJulia` is derived if the type is an isbits type with no type parameters, enables converting
-  data of that type directly to a `Value` with `Value::new`.
+- `IntoJulia` is derived if the type is an `isbits`` type with no type parameters, enables
+  converting data of that type directly to a `Value` with `Value::new`. The `Value` is allocated
+  by creating a new uninitialized struct and copying the data into it.
 
-- `ConstructType` is derived if no type parameters have been elided, if it does have elided
-  parameters, a zero-sized struct named `{type_name}TypeConstructor` is generated which elides no
-  parameters and derives nothing but this trait. This trait enables the Julia type associated with
-  the Rust type to be constructed without depending on any existing data.
+- `ConstructType` is derived if no type parameters have been elided, if the generated struct does
+  have elided parameters, a zero-sized struct named `{type_name}TypeConstructor` is additionally
+  generated which elides no parameters and derives nothing but this trait. This trait enables the
+  Julia type associated with the Rust type to be constructed without depending on any existing
+  data.
 
 - `CCallArg` and `CCallReturn` are derived if the type is immutable, these types can be used in
   argument and return positions with Rust functions that are called from Julia through `ccall`.
+  Mutable types don't implement this trait so they can't be used in Rust signatures directly,
+  `TypedValue` must be used to guarantee the data is passed by reference rather than by value.
 
 Some types are only available in jlrs if the `internal-types` feature is enabled, if you've
 enabled this feature you can set the `internaltypes` keyword argument to `true` to make use of
@@ -157,13 +160,13 @@ these provided layouts in the unlikely case that the types you're reflecting dep
 Similarly, the `Float16` type can only be reflected when the `f16` feature is enabled in jlrs and
 the `f16` keyword argument is set to `true`.
 
-The result of this function can be written to a file, its contents will normally be a valid Rust
-module.
+The result of this function can be written to a file, its contents should be a valid Rust module
+when the jlrs prelude is imported.
 
-When you use these layouts with jlrs, these types must be available with the same path. For
-example, if you generate layouts for `Main.Bar.Baz`, this type must be available through that
-exact path and not some other path like `Main.Foo.Bar.Baz`. The path can be overriden by calling
-`overridepath!`.
+When you use these layouts with jlrs, the types they've been generated from must be available with
+the same path at generation time and run time. For example, if you generate a layout for
+`Main.Bar.Baz`, this type must be available through that path and not some other path like
+`Main.Foo.Bar.Baz`. The path can be overriden by calling `overridepath!`.
 
 # Example
 ```jldoctest

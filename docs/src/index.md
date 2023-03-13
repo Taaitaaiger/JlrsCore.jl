@@ -2,8 +2,18 @@
 
 This package must be used in combination with the jlrs crate for the Rust programming language. It provides core functionality that jlrs depends on, can be used to generate Rust structs from Julia struct, and generate Julia modules that have been (partially) implemented in Rust in combination with the `julia_module` macro from jlrs.
 
+## Jlrs
 
-## Reflect
+The main module of this package provides some functionality that is used by crates that use the `julia_module` macro to export functionality to Julia. There's a function that lets you configure the size of the thread pool associated with a package, and several custom error types.
+
+### Types and methods
+
+```@autodocs
+Modules = [Jlrs]
+```
+
+
+## Jlrs.Reflect
 
 The functions defined in the `Reflect` module can be used to generate jlrs-compatible Rust implementations of Julia structs (layouts).
 
@@ -45,14 +55,14 @@ renamestruct!(layouts, TypeA, "StructA")
 renamefields!(layouts, TypeB, [:fielda => "field_a", :fieldb => "field_b"])
 ```
 
-### Functions
+### Methods
 
 ```@autodocs
 Modules = [Jlrs.Reflect]
 ```
 
 
-## Wrap
+## Jlrs.Wrap
 
 The macros defined in the `Wrap` module can be used to make the items exported by the `julia_module` macro available.
 
@@ -73,6 +83,9 @@ After the crate has been built (NB: the crate type must have been set to `cdylib
 module Example
 using Jlrs.Wrap
 
+# If the library has been distributed as a JLL package, e.g. `Example_jll`, you can replace the 
+# path to the library with `Example_jll.libexample_path` if `libexample` is the name of the 
+# `LibraryProduct`.
 @wrapmodule("path/to/libexample", :module_init_fn)
 
 function __init__()
@@ -88,7 +101,7 @@ Modules = [Jlrs.Wrap]
 ```
 
 
-## Ledger
+## Jlrs.Ledger
 
 Jlrs uses a ledger to track whether Julia data is currently borrowed. By tracking this information, it's safer to access data from Rust because it enforces Rust's borrowing rules at runtime. While this is mostly used internally, you can make use of this functionality from Julia to prevent data you're actively using in Julia to be accessed incorrectly from Rust.
 

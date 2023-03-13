@@ -118,7 +118,7 @@ Marks the data as being borrowed. Always returns `true`, you must call  `unborro
 you're done using it.
 """
 function borrow_shared_unchecked(@nospecialize data::Any)
-    res = ccall(BORROW_EXCLUSIVE[], UInt8, (Ptr{Cvoid},), Base.pointer_from_objref(data))
+    res = ccall(BORROW_SHARED_UNCHECKED[], UInt8, (Ptr{Cvoid},), Base.pointer_from_objref(data))
     if res == 0x0
         false
     elseif res == 0x1
@@ -138,7 +138,7 @@ success, `false` if the data is already borrowed. If `true` is returned you must
 `unborrow_exclusive` when you're done using it.
 """
 function try_borrow_exclusive(@nospecialize data::Any)
-    res = ccall(BORROW_SHARED_UNCHECKED[], UInt8, (Ptr{Cvoid},), Base.pointer_from_objref(data))
+    res = ccall(BORROW_EXCLUSIVE[], UInt8, (Ptr{Cvoid},), Base.pointer_from_objref(data))
     if res == 0x0
         false
     elseif res == 0x1

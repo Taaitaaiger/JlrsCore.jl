@@ -1,6 +1,8 @@
 using Jlrs.Reflect
+using Jlrs.Ledger
 using Test
 
+include("Ledger.jl")
 include("AbstractTypes.jl")
 include("SingleFieldBits.jl")
 include("Mutable.jl")
