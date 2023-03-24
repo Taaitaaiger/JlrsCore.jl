@@ -89,7 +89,7 @@ using Jlrs.Wrap
 @wrapmodule("path/to/libexample", :module_init_fn)
 
 function __init__()
-  @initjlrs
+    @initjlrs
 end
 end
 ```

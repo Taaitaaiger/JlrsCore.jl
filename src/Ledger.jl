@@ -1,6 +1,6 @@
 module Ledger
 import Libdl
-using JlrsLedger_jll: libjlrs_ledger_handle
+import JlrsLedger_jll: libjlrs_ledger_handle
 
 """
 The current version of the ledger API.
@@ -40,6 +40,10 @@ struct PoisonError <: Exception end
 Returns `true` if there is at least one active shared borrow of this data.
 """
 function is_borrowed_shared(@nospecialize data::Any)
+    if !ismutable(data)
+        return false
+    end
+
     res = ccall(IS_BORROWED_SHARED[], UInt8, (Ptr{Cvoid},), Base.pointer_from_objref(data))
     if res == 0x0
         false
@@ -58,6 +62,10 @@ end
 Returns `true` if this data is exclusively borrowed.
 """
 function is_borrowed_exclusive(@nospecialize data::Any)
+    if !ismutable(data)
+        return false
+    end
+
     res = ccall(IS_BORROWED_EXCLUSIVE[], UInt8, (Ptr{Cvoid},), Base.pointer_from_objref(data))
     if res == 0x0
         false
@@ -78,6 +86,10 @@ Returns `true` if this data is borrowed. Equivalent to
 `is_borrowed_shared(data) || is_borrowed_exclusive(data)`.
 """
 function is_borrowed(@nospecialize data::Any)
+    if !ismutable(data)
+        return false
+    end
+
     res = ccall(IS_BORROWED[], UInt8, (Ptr{Cvoid},), Base.pointer_from_objref(data))
     if res == 0x0
         false
@@ -98,6 +110,10 @@ success, `false` if the data is already borrowed exclusively. If `true` is retur
 `unborrow_shared` when you're done using it.
 """
 function try_borrow_shared(@nospecialize data::Any)
+    if !ismutable(data)
+        return true
+    end
+
     res = ccall(BORROW_SHARED[], UInt8, (Ptr{Cvoid},), Base.pointer_from_objref(data))
     if res == 0x0
         false
@@ -118,6 +134,10 @@ Marks the data as being borrowed. Always returns `true`, you must call  `unborro
 you're done using it.
 """
 function borrow_shared_unchecked(@nospecialize data::Any)
+    if !ismutable(data)
+        return true
+    end
+
     res = ccall(BORROW_SHARED_UNCHECKED[], UInt8, (Ptr{Cvoid},), Base.pointer_from_objref(data))
     if res == 0x0
         false
@@ -138,6 +158,10 @@ success, `false` if the data is already borrowed. If `true` is returned you must
 `unborrow_exclusive` when you're done using it.
 """
 function try_borrow_exclusive(@nospecialize data::Any)
+    if !ismutable(data)
+        return false
+    end
+
     res = ccall(BORROW_EXCLUSIVE[], UInt8, (Ptr{Cvoid},), Base.pointer_from_objref(data))
     if res == 0x0
         false
@@ -160,6 +184,10 @@ Each successfull call to `try_borrow_shared` and `borrow_shared_unchecked` must 
 call to this function.
 """
 function unborrow_shared(@nospecialize data::Any)
+    if !ismutable(data)
+        return true
+    end
+
     res = ccall(UNBORROW_SHARED[], UInt8, (Ptr{Cvoid},), Base.pointer_from_objref(data))
     if res == 0x0
         false
@@ -182,6 +210,10 @@ ledger, a `LedgerError` is thrown if the data wasn't present in the ledger.
 Each successfull call to `try_borrow_exclusive` must have a matching call to this function.
 """
 function unborrow_exclusive(@nospecialize data::Any)
+    if !ismutable(data)
+        return true
+    end
+
     res = ccall(UNBORROW_EXCLUSIVE[], UInt8, (Ptr{Cvoid},), Base.pointer_from_objref(data))
     if res == 0x0
         false

@@ -39,7 +39,7 @@ struct JlrsModuleInfo
 end
 
 # Type of the key used in the global function list, used to uniquely identify methods
-const MethodKey = Tuple{Symbol,Symbol,Symbol,UInt}
+const MethodKey = Tuple{Symbol,Symbol,UInt}
 
 function _module_name_hash(mod::Module, previous_hash=UInt(0))
     parent = parentmodule(mod)
@@ -49,8 +49,6 @@ function _module_name_hash(mod::Module, previous_hash=UInt(0))
     return _module_name_hash(parent, hash(nameof(mod), previous_hash))
 end
 
-_method_name_symbol(funcname::Symbol) = (:function, funcname)
-
 # Return a unique key for the given function, not taking into account the pointer values. This key has to be stable between Julia runs.
 function methodkey(f::JlrsFunctionInfo)
     mhash = UInt(0)
@@ -59,7 +57,7 @@ function methodkey(f::JlrsFunctionInfo)
     end
     mhash = hash(f.julia_return_type, mhash)
     mhash = hash(_module_name_hash(f.override_module), mhash)
-    return (_method_name_symbol(f.name)..., nameof(f.override_module), mhash)
+    return (f.name, nameof(f.override_module), mhash)
   end
 
 # Pointers to function and thunk
