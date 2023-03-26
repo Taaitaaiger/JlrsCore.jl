@@ -13,7 +13,7 @@ struct Pool
     set_pool_size_fn::Ptr{Cvoid}
 end
 
-const pools = Dict{Module, Pool}()
+const pools = Dict{Module,Pool}()
 const init_lock = ReentrantLock()
 
 """
@@ -34,7 +34,7 @@ function set_pool_size(mod::Module, size::Unsigned)
 
     @lock init_lock begin
         set_pool_size_fn = pools[mod].set_pool_size_fn
-        ccall(set_pool_size_fn, Cvoid, (UInt, ), size)
+        ccall(set_pool_size_fn, Cvoid, (UInt,), size)
     end
 
     nothing
@@ -96,11 +96,20 @@ mutable struct RustResult{T}
     is_exc::Bool
 end
 
-convert(::Type{T}, data::RustResult{T}) where T = data()
+struct JlrsCatch
+    tag::UInt32
+    error::Ptr{Cvoid}
+end
+
+function call_catch_wrapper(func::Ptr{Cvoid}, callback::Ptr{Cvoid}, trampoline::Ptr{Cvoid}, result::Ptr{Cvoid}, frame_slice::Ptr{Cvoid})::JlrsCatch
+    ccall(func, JlrsCatch, (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}), callback, trampoline, result, frame_slice)
+end
+
+convert(::Type{T}, data::RustResult{T}) where {T} = data()
 convert(::Type{Nothing}, data::Jlrs.RustResult{Nothing}) = data()
 convert(::Type{Any}, data::Jlrs.RustResult{Any}) = data()
 
-function (res::RustResult{T})() where T
+function (res::RustResult{T})() where {T}
     if res.is_exc
         throw(res.data)
     else
@@ -110,7 +119,7 @@ end
 
 # A Dict containing the root modules of all loaded packages is maintained to be able to
 # easily access these modules from Rust .
-const loaded_packages = Dict{Symbol, Module}()
+const loaded_packages = Dict{Symbol,Module}()
 const package_lock = ReentrantLock()
 
 # Returns the root module of the package with the name package_name if this package has been
