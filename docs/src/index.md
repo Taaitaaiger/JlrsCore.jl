@@ -83,8 +83,8 @@ After the crate has been built (NB: the crate type must have been set to `cdylib
 module Example
 using Jlrs.Wrap
 
-# If the library has been distributed as a JLL package, e.g. `Example_jll`, you can replace the 
-# path to the library with `Example_jll.libexample_path` if `libexample` is the name of the 
+# If the library has been distributed as a JLL package, e.g. `Example_jll`, you can replace the
+# path to the library with `Example_jll.libexample_path` if `libexample` is the name of the
 # `LibraryProduct`.
 @wrapmodule("path/to/libexample", :module_init_fn)
 

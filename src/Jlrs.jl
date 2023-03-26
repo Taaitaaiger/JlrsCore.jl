@@ -86,9 +86,9 @@ value of type T, or an exception. If is_exc is false, the data is converted to T
 otherwise the exception is thrown.
 
 Sometimes this conversion is ambiguous. This can typically be solved by providing a custom
-implementation of `convert`, which can be implemented as 
+implementation of `convert`, which can be implemented as
 `Base.convert(::Type{T}, data::RustResult{T}) = data()`
-where T has to be replaced with the problematic type. When this error occurs, the correct 
+where T has to be replaced with the problematic type. When this error occurs, the correct
 signature is part of the error message.
 """
 mutable struct RustResult{T}
