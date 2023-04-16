@@ -1,10 +1,10 @@
-module Jlrs
+module JlrsCore
 
 using Base: @lock
 import Base: convert
 export set_pool_size, BorrowError, JlrsError, RustResult
 
-const version = v"0.1.0"
+const JLRS_API_VERSION = 1
 
 # TODO: Thread-safety
 const color = Ref{Bool}(false)
@@ -106,8 +106,8 @@ function call_catch_wrapper(func::Ptr{Cvoid}, callback::Ptr{Cvoid}, trampoline::
 end
 
 convert(::Type{T}, data::RustResult{T}) where {T} = data()
-convert(::Type{Nothing}, data::Jlrs.RustResult{Nothing}) = data()
-convert(::Type{Any}, data::Jlrs.RustResult{Any}) = data()
+convert(::Type{Nothing}, data::JlrsCore.RustResult{Nothing}) = data()
+convert(::Type{Any}, data::JlrsCore.RustResult{Any}) = data()
 
 function (res::RustResult{T})() where {T}
     if res.is_exc

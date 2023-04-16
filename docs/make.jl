@@ -1,7 +1,7 @@
 push!(LOAD_PATH,"../src/")
 
-using Documenter, Jlrs, Jlrs.Reflect, Jlrs.Wrap, Jlrs.Ledger
+using Documenter, JlrsCore, JlrsCore.Reflect, JlrsCore.Wrap, JlrsCore.Ledger
 makedocs(
-    sitename="Jlrs",
-    modules = [Jlrs.Reflect, Jlrs.Wrap, Jlrs.Ledger]
+    sitename="JlrsCore",
+    modules = [JlrsCore.Reflect, JlrsCore.Wrap, JlrsCore.Ledger]
 )

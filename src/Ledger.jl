@@ -8,7 +8,7 @@ The current version of the ledger API.
 If the API version of JlrsLedger_jll and this version don't match, this module will fail to
 initialize.
 """
-const API_VERSION = 0x1
+const LEDGER_API_VERSION = 0x1
 
 const API_VERSION_FN = Ref{Ptr{Cvoid}}(C_NULL)
 const IS_BORROWED_SHARED = Ref{Ptr{Cvoid}}(C_NULL)
@@ -22,7 +22,7 @@ const UNBORROW_EXCLUSIVE = Ref{Ptr{Cvoid}}(C_NULL)
 
 export LedgerError, PoisonError, is_borrowed, is_borrowed_exclusive, is_borrowed_shared,
        try_borrow_exclusive, try_borrow_shared, borrow_shared_unchecked, unborrow_exclusive,
-       unborrow_shared, API_VERSION
+       unborrow_shared, LEDGER_API_VERSION
 
 """
 An exception that indicates the ledger was used incorrectly and has likely been corrupted.
@@ -233,7 +233,7 @@ function __init__()
     @assert api_version_fn != C_NULL "API version function is null"
 
     api_version = ccall(api_version_fn, UInt, ())
-    @assert api_version == API_VERSION "Incompatible version of jlrs_ledger"
+    @assert api_version == LEDGER_API_VERSION "Incompatible version of jlrs_ledger"
 
     IS_BORROWED_SHARED[] = Libdl.dlsym(libjlrs_ledger_handle, "jlrs_ledger_is_borrowed_shared")
     IS_BORROWED_EXCLUSIVE[] = Libdl.dlsym(libjlrs_ledger_handle, "jlrs_ledger_is_borrowed_exclusive")

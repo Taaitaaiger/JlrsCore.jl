@@ -73,5 +73,5 @@ jobs:
       - run: |
           julia --project=docs -e '
             using Documenter: doctest
-            using Jlrs
-            doctest(Jlrs)'
+            using JlrsCore
+            doctest(JlrsCore)'

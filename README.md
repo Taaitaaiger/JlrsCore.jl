@@ -1,4 +1,4 @@
-# Jlrs
+# JlrsCore
 
 This package must be used in combination with the jlrs crate for the Rust programming language. It provides core functionality that jlrs depends on, can be used to generate Rust structs from Julia types, and generate Julia modules that have been (partially) implemented in Rust in combination with the `julia_module` macro from jlrs.
 
@@ -14,7 +14,7 @@ Three things that are not supported are structs with union or tuple fields that 
 You can generate layouts by calling the `reflect` function with a `Vector` of types:
 
 ```julia
-using Jlrs.Reflect
+using JlrsCore.Reflect
 
 struct TypeA
     # ...fields
@@ -40,7 +40,7 @@ end
 Layouts for types used as fields and type parameters are automatically generated. If you want or need to rename structs or their fields you can use `renamestruct!` and `renamefields!` as follows:
 
 ```julia
-using Jlrs.Reflect
+using JlrsCore.Reflect
 
 layouts = reflect([TypeA, TypeB, ...])
 renamestruct!(layouts, TypeA, "StructA")
@@ -66,7 +66,7 @@ After the crate has been built (NB: the crate type must have been set to `cdylib
 
 ```julia
 module Example
-using Jlrs.Wrap
+using JlrsCore.Wrap
 
 @wrapmodule("../relative/path/to/libexample", :module_init_fn)
 

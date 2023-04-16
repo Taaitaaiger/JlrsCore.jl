@@ -170,7 +170,7 @@ the same path at generation time and run time. For example, if you generate a la
 
 # Example
 ```jldoctest
-julia> using Jlrs.Reflect
+julia> using JlrsCore.Reflect
 
 julia> reflect([Complex])
 #[repr(C)]
@@ -211,7 +211,7 @@ causes warnings.
 
 # Example
 ```jldoctest
-julia> using Jlrs.Reflect
+julia> using JlrsCore.Reflect
 
 julia> struct Foo end
 
@@ -243,7 +243,7 @@ Rust code or causes warnings.
 
 # Example
 ```jldoctest
-julia> using Jlrs.Reflect
+julia> using JlrsCore.Reflect
 
 julia> struct Food burger::Bool end
 
@@ -286,7 +286,7 @@ runtime.
 
 # Example
 ```jldoctest
-julia> using Jlrs.Reflect
+julia> using JlrsCore.Reflect
 
 julia> struct Foo end
 

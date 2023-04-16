@@ -1,4 +1,4 @@
-using Jlrs.Reflect
+using JlrsCore.Reflect
 
 struct BitsIntChar
     a::Int

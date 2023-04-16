@@ -4,7 +4,7 @@ module Wrap
 # https://github.com/JuliaInterop/CxxWrap.jl/blob/709c18788fec41ef27d034c33d53aa21742c147c/src/CxxWrap.jl
 
 import Libdl
-import Jlrs
+import JlrsCore
 import Base.Docs: Binding, docstr, doc!
 
 export @wrapmodule, @initjlrs, AsyncCCall
@@ -167,7 +167,7 @@ function build_function_expression(func::JlrsFunctionInfo, funcidx, julia_mod)
     return function_expression
 end
 
-# Wrap functions from the Jlrs module to the passed julia module
+# Wrap functions from the JlrsCore module to the passed julia module
 function wrap_functions(functions, julia_mod)
     if !isempty(julia_mod.__jlrswrap_pointers)
         empty!(julia_mod.__jlrswrap_methodkeys)

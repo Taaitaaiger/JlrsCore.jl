@@ -1,5 +1,5 @@
-using Jlrs.Reflect
-using Jlrs.Ledger
+using JlrsCore.Reflect
+using JlrsCore.Ledger
 using Test
 
 include("Ledger.jl")
