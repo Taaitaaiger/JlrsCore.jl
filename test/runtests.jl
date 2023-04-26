@@ -1,8 +1,10 @@
+using JlrsCore
 using JlrsCore.Reflect
 using JlrsCore.Ledger
 using Test
 
 include("Ledger.jl")
+include("RustResult.jl")
 include("AbstractTypes.jl")
 include("SingleFieldBits.jl")
 include("Mutable.jl")
