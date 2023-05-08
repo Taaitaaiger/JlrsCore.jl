@@ -192,6 +192,7 @@ function generate_docs(filename, doc_items::Vector{DocItem})
         docstring = docstr(item.doc)
         docstring.data[:path] = filename
         docstring.data[:module] = item.mod
+        docstring.data[:linenumber] = 1
         doc!(item.mod, binding, docstring, item.signature)
     end
 end
