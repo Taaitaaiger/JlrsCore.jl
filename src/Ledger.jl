@@ -8,7 +8,7 @@ The current version of the ledger API.
 If the API version of JlrsLedger_jll and this version don't match, this module will fail to
 initialize.
 """
-const LEDGER_API_VERSION = 0x1
+const LEDGER_API_VERSION = 0x2
 
 const API_VERSION_FN = Ref{Ptr{Cvoid}}(C_NULL)
 const IS_BORROWED_SHARED = Ref{Ptr{Cvoid}}(C_NULL)
@@ -30,11 +30,6 @@ An exception that indicates the ledger was used incorrectly and has likely been 
 struct LedgerError <: Exception end
 
 """
-An exception that indicates that the internal lock of the ledger was poisoned.
-"""
-struct PoisonError <: Exception end
-
-"""
     is_borrowed_shared(data)
 
 Returns `true` if there is at least one active shared borrow of this data.
@@ -51,8 +46,6 @@ function is_borrowed_shared(@nospecialize data::Any)
         true
     elseif res == 0x2
         throw(LedgerError())
-    elseif res == 0x3
-        throw(PoisonError())
     end
 end
 
@@ -73,8 +66,6 @@ function is_borrowed_exclusive(@nospecialize data::Any)
         true
     elseif res == 0x2
         throw(LedgerError())
-    elseif res == 0x3
-        throw(PoisonError())
     end
 end
 
@@ -97,8 +88,6 @@ function is_borrowed(@nospecialize data::Any)
         true
     elseif res == 0x2
         throw(LedgerError())
-    elseif res == 0x3
-        throw(PoisonError())
     end
 end
 
@@ -121,8 +110,6 @@ function try_borrow_shared(@nospecialize data::Any)
         true
     elseif res == 0x2
         throw(LedgerError())
-    elseif res == 0x3
-        throw(PoisonError())
     end
 end
 
@@ -145,8 +132,6 @@ function borrow_shared_unchecked(@nospecialize data::Any)
         true
     elseif res == 0x2
         throw(LedgerError())
-    elseif res == 0x3
-        throw(PoisonError())
     end
 end
 
@@ -169,8 +154,6 @@ function try_borrow_exclusive(@nospecialize data::Any)
         true
     elseif res == 0x2
         throw(LedgerError())
-    elseif res == 0x3
-        throw(PoisonError())
     end
 end
 
@@ -178,7 +161,8 @@ end
     unborrow_shared(data)
 
 Ends an active shared borrow. Returns `true` if the borrow was successfully removed from the
-ledger, a `LedgerError` is thrown if the data wasn't present in the ledger.
+ledger, `false` if other active shared borrows still exist, a `LedgerError` is thrown if the data
+wasn't present in the ledger.
 
 Each successfull call to `try_borrow_shared` and `borrow_shared_unchecked` must have a matching
 call to this function.
@@ -195,8 +179,6 @@ function unborrow_shared(@nospecialize data::Any)
         true
     elseif res == 0x2
         throw(LedgerError())
-    elseif res == 0x3
-        throw(PoisonError())
     end
 end
 
@@ -221,8 +203,6 @@ function unborrow_exclusive(@nospecialize data::Any)
         true
     elseif res == 0x2
         throw(LedgerError())
-    elseif res == 0x3
-        throw(PoisonError())
     end
 end
 
@@ -234,6 +214,9 @@ function __init__()
 
     api_version = ccall(api_version_fn, UInt, ())
     @assert api_version == LEDGER_API_VERSION "Incompatible version of jlrs_ledger"
+
+    init_fn = Libdl.dlsym(libjlrs_ledger_handle, "jlrs_ledger_init")
+    ccall(init_fn, Cvoid, ())
 
     IS_BORROWED_SHARED[] = Libdl.dlsym(libjlrs_ledger_handle, "jlrs_ledger_is_borrowed_shared")
     IS_BORROWED_EXCLUSIVE[] = Libdl.dlsym(libjlrs_ledger_handle, "jlrs_ledger_is_borrowed_exclusive")

@@ -19,7 +19,7 @@
     @test Ledger.try_borrow_shared(arr)
     @test_throws LedgerError Ledger.try_borrow_exclusive(arr)
     @test Ledger.try_borrow_shared(arr)
-    @test Ledger.unborrow_shared(arr)
+    @test Ledger.unborrow_shared(arr) == false
     @test Ledger.unborrow_shared(arr)
 
 
