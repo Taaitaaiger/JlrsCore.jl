@@ -83,7 +83,7 @@ struct TupleLayout <: Layout
     fields::Vector{TupleField}
     scopelifetime::Bool
     datalifetime::Bool
-    TupleLayout(fields::Vector{TupleField}, scopelifetime::Bool, datalifetime::Bool) = new(string("::jlrs::data::layout::tuple::Tuple", length(fields)), fields, scopelifetime, datalifetime)
+    TupleLayout(fields::Vector{TupleField}, scopelifetime::Bool, datalifetime::Bool) = new("::jlrs::data::layout::tuple::Tuple$(length(fields))", fields, scopelifetime, datalifetime)
 end
 
 struct BuiltinLayout <: Layout
@@ -307,6 +307,12 @@ function overridepath!(layouts::Layouts, type::Type, path::String)::Nothing
     layouts.dict[btype].path = path
 
     nothing
+end
+
+if VERSION.minor == 6
+    function ismutabletype(t)
+        t.mutable
+    end
 end
 
 function StringLayouts(layouts::Layouts)
@@ -547,6 +553,56 @@ function isnonparametric(type::Union)::Bool
     end
 
     true
+end
+
+function is_pointer_free_type(ty, env)
+    if !isdefined(ty, :types) 
+        return true
+    end
+
+    for ty in ty.types
+        if ty isa DataType
+            if ismutabletype(ty)
+                return false
+            elseif isabstracttype(ty)
+                return false
+            else
+                if !has_pointer_free_partialtype(ty, env)
+                    return false
+                end
+            end
+        elseif ty isa Union
+            return false           
+        elseif ty isa UnionAll
+            ty2 = ty
+            while ty2 isa UnionAll
+                if ty2.var ∉ env
+                    return false
+                end
+
+                ty2 = ty2.body
+            end
+
+            if isabstracttype(ty)
+                return false
+            elseif !has_pointer_free_partialtype(ty, env)
+                return false
+            end
+        end
+    end
+
+    true
+end
+
+function has_pointer_free_basetype(ty)
+    basety = basetype(ty)
+    env = Set(basety.parameters)
+    is_pointer_free_type(basety, env)
+end
+
+function has_pointer_free_partialtype(ty, env)
+    partialty = partialtype(ty)
+    is_pointer_free_type(partialty, env)
 end
 
 function extracttupledeps_notconcrete!(acc::Dict{DataType,Set{DataType}}, type::DataType, layouts::Dict{Type,Layout})::Nothing
@@ -931,7 +987,7 @@ function strgenerics(layout::StructLayout)::Union{Nothing,String}
     end
 
     if length(generics) > 0
-        string("<", join(generics, ", "), ">")
+        "<$(join(generics, ", "))>"
     end
 end
 
@@ -943,10 +999,10 @@ function strsignature(ty::DataType, layouts::Dict{Type,Layout})::String
             push!(generics, strsignature(ty, layouts))
         end
 
-        name = string("::jlrs::data::layout::tuple::Tuple", length(generics))
+        name = "::jlrs::data::layout::tuple::Tuple$(length(generics))"
 
         if length(generics) > 0
-            return string(name, "<", join(generics, ", "), ">")
+            return "$(name)<$(join(generics, ", "))>"
         else
             return name
         end
@@ -984,7 +1040,7 @@ function strsignature(ty::DataType, layouts::Dict{Type,Layout})::String
     end
 
     name = if length(generics) > 0
-        string(name, "<", join(generics, ", "), ">")
+        "$(name)<$(join(generics, ", "))>"
     else
         name
     end
@@ -1034,7 +1090,7 @@ function strsignature(layout::StructLayout, field::Union{StructField,TupleField}
     end
 
     n = if length(generics) > 0
-        string(field.fieldtype.rsname, "<", join(generics, ", "), ">")
+        "$(field.fieldtype.rsname)<$(join(generics, ", "))>"
     else
         field.fieldtype.rsname
     end
@@ -1054,7 +1110,7 @@ function strtuplesignature(layout::StructLayout, field::Union{StructField,TupleF
     end
 
     if length(generics) > 0
-        string(field.fieldtype.rsname, "<", join(generics, ", "), ">")
+        "$(field.fieldtype.rsname)<$(join(generics, ", "))>"
     else
         field.fieldtype.rsname
     end
@@ -1063,17 +1119,17 @@ end
 function strstructname(layout::StructLayout)::String
     generics = strgenerics(layout)
     if generics !== nothing
-        string(layout.rsname, generics)
+        "$(layout.rsname)$(generics)"
     else
-        string(layout.rsname)
+        "$(layout.rsname)"
     end
 end
 
 function structfield_parts(layout::StructLayout, field::StructField, layouts::Dict{Type,Layout})::Vector{String}
     parts = Vector{String}()
     if field.fieldtype isa BitsUnionLayout
-        align_field_name = string("_", field.rsname, "_align")
-        flag_field_name = string(field.rsname, "_flag")
+        align_field_name = "_$(field.rsname)_align"
+        flag_field_name = "$(field.rsname)_flag"
 
         is_bits_union, size, align = Base.uniontype_layout(field.fieldtype.union_of)
         @assert is_bits_union "Not a bits union. This should never happen, please file a bug report."
@@ -1093,14 +1149,14 @@ function structfield_parts(layout::StructLayout, field::StructField, layouts::Di
         end
 
         push!(parts, "#[jlrs(bits_union_align)]")
-        push!(parts, string(align_field_name, ": ", alignment_ty, ","))
+        push!(parts, "$(align_field_name): $(alignment_ty),")
         push!(parts, "#[jlrs(bits_union)]")
-        push!(parts, string("pub ", field.rsname, ": ::jlrs::data::layout::union::BitsUnion<", string(size), ">,"))
+        push!(parts, "pub $(field.rsname): ::jlrs::data::layout::union::BitsUnion<$(size)>,")
         push!(parts, "#[jlrs(bits_union_flag)]")
-        push!(parts, string("pub ", flag_field_name, ": u8,"))
+        push!(parts, "pub $(flag_field_name): u8,")
     else
         sig = strsignature(layout, field, layouts)
-        push!(parts, string("pub ", field.rsname, ": ", sig, ","))
+        push!(parts, "pub $(field.rsname): $(sig),")
     end
 
     parts
@@ -1127,7 +1183,7 @@ function strlayout(layout::AbstractTypeLayout, ::Dict{Type,Layout})::Union{Nothi
     typepath = string(layout.path)
     if length(typepath) == 0
         modulepath = join(filteredname(layout.typename.module), ".")
-        typepath = string(modulepath, ".", layout.typename.name)
+        typepath = "$(modulepath).$(layout.typename.name)"
     end
 
     parts = []
@@ -1136,13 +1192,13 @@ function strlayout(layout::AbstractTypeLayout, ::Dict{Type,Layout})::Union{Nothi
     param_names = map(param -> string(param.name), layout.typeparams)
 
     push!(parts, "#[derive(ConstructType)]")
-    push!(parts, string("#[jlrs(julia_type = \"", typepath, "\")]"))
+    push!(parts, "#[jlrs(julia_type = \"$(typepath)\")]")
     if length(param_names) == 0
-        push!(parts, string("pub struct ", layout.rsname, " {"))
+        push!(parts, "pub struct $(layout.rsname) {")
     else
-        push!(parts, string("pub struct ", layout.rsname, "<", join(param_names, ", "), "> {"))
+        push!(parts, "pub struct $(layout.rsname)<$(join(param_names, ", "))> {")
         for param in param_names
-            push!(parts, string("    _", lowercase(param), ": ::std::marker::PhantomData<", param, ">,"))
+            push!(parts, "    _$(lowercase(param)): ::std::marker::PhantomData<$(param)>,")
         end
     end
     push!(parts, "}")
@@ -1154,7 +1210,7 @@ function strlayout(layout::ContainsAtomicFieldsLayout, ::Dict{Type,Layout})::Uni
     typepath = string(layout.path)
     if length(typepath) == 0
         modulepath = join(filteredname(layout.typename.module), ".")
-        typepath = string(modulepath, ".", layout.typename.name)
+        typepath = "$(modulepath).$(layout.typename.name)"
     end
 
     parts = []
@@ -1163,13 +1219,13 @@ function strlayout(layout::ContainsAtomicFieldsLayout, ::Dict{Type,Layout})::Uni
     param_names = map(param -> string(param.name), layout.typeparams)
 
     push!(parts, "#[derive(ConstructType)]")
-    push!(parts, string("#[jlrs(julia_type = \"", typepath, "\")]"))
+    push!(parts, "#[jlrs(julia_type = \"$(typepath)\")]")
     if length(param_names) == 0
-        push!(parts, string("pub struct ", layout.rsname, "TypeConstructor {"))
+        push!(parts, "pub struct $(layout.rsname)TypeConstructor {")
     else
-        push!(parts, string("pub struct ", layout.rsname, "TypeConstructor<", join(param_names, ", "), "> {"))
+        push!(parts, "pub struct $(layout.rsname)TypeConstructor<$(join(param_names, ", "))> {")
         for param in param_names
-            push!(parts, string("    _", lowercase(param), ": ::std::marker::PhantomData<", param, ">,"))
+            push!(parts, "    _$(lowercase(param)): ::std::marker::PhantomData<$(param)>,")
         end
     end
     push!(parts, "}")
@@ -1181,24 +1237,30 @@ function strlayout(layout::StructLayout, layouts::Dict{Type,Layout})::Union{Noth
     ty = getproperty(layout.typename.module, layout.typename.name)
 
     is_parameter_free = ty isa DataType && isnothing(findfirst(p -> p isa TypeVar, ty.parameters))
-    is_bits = is_parameter_free && isbitstype(ty)
-    is_zst = is_bits && sizeof(ty) == 0
+    into_julia = is_parameter_free && isbitstype(ty)
+    is_bits = has_pointer_free_basetype(ty)
+    is_zst = into_julia && sizeof(ty) == 0
     is_mut = ismutabletype(basetype(ty))
     is_constructible = isnothing(findfirst(x -> x.elide == true, layout.typeparams))
 
     traits = ["Clone", "Debug", "Unbox", "ValidLayout", "Typecheck"]
-    is_bits && push!(traits, "IntoJulia")
+    into_julia && push!(traits, "IntoJulia")
     is_mut || push!(traits, "ValidField")
+    is_bits && push!(traits, "IsBits")
     is_constructible && push!(traits, "ConstructType")
-    is_constructible && !is_zst && !is_mut && push!(traits, "CCallArg", "CCallReturn")
+    is_constructible && !is_zst && !is_mut && push!(traits, "CCallArg")
+
+    # TODO: Are zero-sized types valid return types? `Nothing` is, are others?
+    # What about bits types with elided parameters?
+    is_constructible && !is_zst && !is_mut && is_bits && push!(traits, "CCallReturn")
 
     typepath = string(layout.path)
     if length(typepath) == 0
         modulepath = join(filteredname(layout.typename.module), ".")
-        typepath = string(modulepath, ".", layout.typename.name)
+        typepath = "$(modulepath).$(layout.typename.name)"
     end
 
-    typepath_annotation = string("julia_type = \"", typepath, "\"")
+    typepath_annotation = "julia_type = \"$(typepath)\""
 
     annotations = Vector{String}()
     push!(annotations, typepath_annotation)
@@ -1206,27 +1268,48 @@ function strlayout(layout::StructLayout, layouts::Dict{Type,Layout})::Union{Noth
 
     parts = [
         "#[repr(C)]",
-        string("#[derive(", join(traits, ", "), ")]"),
-        string("#[jlrs(", join(annotations, ", "), ")]"),
-        string("pub struct ", strstructname(layout), " {")
+        "#[derive($(join(traits, ", ")))]",
+        "#[jlrs($(join(annotations, ", ")))]",
+        "pub struct $(strstructname(layout)) {"
     ]
     for field in layout.fields
         for part in structfield_parts(layout, field, layouts)
-            push!(parts, string("    ", part))
+            push!(parts, "    $(part)")
         end
     end
     push!(parts, "}")
 
-    if !is_constructible
+    if !is_constructible        
         # A separate type constructor is needed due to the presence of elided parameters.
+
+        elided_param_names = map(filter(layout.typeparams) do x x.elide end) do x string(x.name) end
+        if isempty(elided_param_names) 
+            elided_param_names = "[]"
+        end
+
+        unelided_param_names = map(filter(layout.typeparams) do x !x.elide end) do x string(x.name) end
+        if isempty(unelided_param_names) 
+            unelided_param_names = "[]"
+        end
+
         param_names = map(param -> string(param.name), layout.typeparams)
+        if isempty(param_names) 
+            param_names = "[]"
+        end
+
+        generics = strgenerics(layout)
+        if isnothing(generics)
+            generics = ""
+        end
+
+        attrs = "#[jlrs($(typepath_annotation), constructor_for = \"$(layout.rsname)\", scope_lifetime = $(layout.scopelifetime), data_lifetime = $(layout.datalifetime), layout_params = $(unelided_param_names), elided_params = $(elided_param_names), all_params = $(param_names))]"
 
         push!(parts, "")
-        push!(parts, "#[derive(ConstructType)]")
-        push!(parts, string("#[jlrs(", typepath_annotation, ")]"))
-        push!(parts, string("pub struct ", layout.rsname, "TypeConstructor<", join(param_names, ", "), "> {"))
+        push!(parts, "#[derive(ConstructType, HasLayout)]")
+        push!(parts, attrs)
+        push!(parts, "pub struct $(layout.rsname)TypeConstructor<$(join(param_names, ", "))> {")
         for param in param_names
-            push!(parts, string("    _", lowercase(param), ": ::std::marker::PhantomData<", param, ">,"))
+            push!(parts, "    _$(lowercase(param)): ::std::marker::PhantomData<$(param)>,")
         end
         push!(parts, "}")
     end

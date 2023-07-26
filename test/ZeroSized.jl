@@ -8,7 +8,7 @@ struct TypedEmpty{T} end
         sb = Reflect.StringLayouts(b)
 
         sb[Empty] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, ConstructType)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, IsBits, ConstructType)]
         #[jlrs(julia_type = "Main.Empty", zero_sized_type)]
         pub struct Empty {
         }"""
@@ -21,13 +21,13 @@ end
         sb = Reflect.StringLayouts(b)
 
         sb[Reflect.basetype(TypedEmpty)] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, IsBits)]
         #[jlrs(julia_type = "Main.TypedEmpty")]
         pub struct TypedEmpty {
         }
-
-        #[derive(ConstructType)]
-        #[jlrs(julia_type = "Main.TypedEmpty")]
+        
+        #[derive(ConstructType, HasLayout)]
+        #[jlrs(julia_type = "Main.TypedEmpty", constructor_for = "TypedEmpty", scope_lifetime = false, data_lifetime = false, layout_params = [], elided_params = ["T"], all_params = ["T"])]
         pub struct TypedEmptyTypeConstructor<T> {
             _t: ::std::marker::PhantomData<T>,
         }"""

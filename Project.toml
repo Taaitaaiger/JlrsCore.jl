@@ -1,15 +1,15 @@
 name = "JlrsCore"
 uuid = "29be08bc-e5fd-4da2-bbc1-72011c6ea2c9"
 authors = ["Thomas van Doornmalen <thomas.vandoornmalen@gmail.com>"]
-version = "0.2.0"
+version = "0.3.0"
 
 [deps]
 JlrsLedger_jll = "946c7259-7191-581b-9320-f4a77977c88e"
 Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
 
 [compat]
-julia = "1.6"
 JlrsLedger_jll = "0.1.0"
+julia = "1.6"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"

@@ -24,7 +24,7 @@ end
         sb = Reflect.StringLayouts(b)
 
         sb[Reflect.basetype(SingleVariant)] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, ConstructType, CCallArg, CCallReturn)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, IsBits, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.SingleVariant")]
         pub struct SingleVariant {
             pub a: i32,
@@ -36,7 +36,7 @@ end
         sb = Reflect.StringLayouts(b)
 
         sb[Reflect.basetype(DoubleVariant)] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
         #[jlrs(julia_type = "Main.DoubleVariant")]
         pub struct DoubleVariant {
             #[jlrs(bits_union_align)]
@@ -53,7 +53,7 @@ end
         sb = Reflect.StringLayouts(b)
 
         sb[Reflect.basetype(SizeAlignMismatch)] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
         #[jlrs(julia_type = "Main.SizeAlignMismatch")]
         pub struct SizeAlignMismatch {
             #[jlrs(bits_union_align)]
@@ -70,7 +70,7 @@ end
         sb = Reflect.StringLayouts(b)
 
         sb[Reflect.basetype(UnionInTuple)] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
         #[jlrs(julia_type = "Main.UnionInTuple")]
         pub struct UnionInTuple<'scope, 'data> {
             pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'scope, 'data>>,

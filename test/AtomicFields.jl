@@ -28,7 +28,7 @@ end
         sb = Reflect.StringLayouts(b)
 
         sb[WithInt32] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, ConstructType, CCallArg, CCallReturn)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, IsBits, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.WithInt32")]
         pub struct WithInt32 {
             pub int32: i32,

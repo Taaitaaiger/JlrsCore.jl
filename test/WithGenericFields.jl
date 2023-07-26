@@ -40,7 +40,7 @@ end
         sb = Reflect.StringLayouts(b)
 
         sb[Reflect.basetype(WithGenericT)] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, IsBits, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.WithGenericT")]
         pub struct WithGenericT<T> {
             pub a: T,
@@ -52,7 +52,7 @@ end
         sb = Reflect.StringLayouts(b)
 
         sb[Reflect.basetype(WithNestedGenericT)] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, IsBits, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.WithNestedGenericT")]
         pub struct WithNestedGenericT<T> {
             pub a: WithGenericT<T>,
@@ -64,7 +64,7 @@ end
         sb = Reflect.StringLayouts(b)
 
         sb[WithSetGeneric] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, ConstructType, CCallArg, CCallReturn)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, IsBits, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.WithSetGeneric")]
         pub struct WithSetGeneric {
             pub a: WithGenericT<i64>,
@@ -76,14 +76,14 @@ end
         sb = Reflect.StringLayouts(b)
 
         sb[Reflect.basetype(WithValueType)] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, IsBits)]
         #[jlrs(julia_type = "Main.WithValueType")]
         pub struct WithValueType {
             pub a: i64,
         }
 
-        #[derive(ConstructType)]
-        #[jlrs(julia_type = "Main.WithValueType")]
+        #[derive(ConstructType, HasLayout)]
+        #[jlrs(julia_type = "Main.WithValueType", constructor_for = "WithValueType", scope_lifetime = false, data_lifetime = false, layout_params = [], elided_params = ["N"], all_params = ["N"])]
         pub struct WithValueTypeTypeConstructor<N> {
             _n: ::std::marker::PhantomData<N>,
         }"""
@@ -94,7 +94,7 @@ end
         sb = Reflect.StringLayouts(b)
 
         sb[WithGenericUnionAll] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
         #[jlrs(julia_type = "Main.WithGenericUnionAll")]
         pub struct WithGenericUnionAll<'scope, 'data> {
             pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'scope, 'data>>,
@@ -110,7 +110,7 @@ end
         sb = Reflect.StringLayouts(b)
 
         sb[WithSetGenericTuple] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, ConstructType, CCallArg, CCallReturn)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, IsBits, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.WithSetGenericTuple")]
         pub struct WithSetGenericTuple {
             pub a: ::jlrs::data::layout::tuple::Tuple1<WithGenericT<i64>>,
@@ -122,7 +122,7 @@ end
         sb = Reflect.StringLayouts(b)
 
         sb[WithPropagatedLifetime] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
         #[jlrs(julia_type = "Main.WithPropagatedLifetime")]
         pub struct WithPropagatedLifetime<'scope> {
             pub a: WithGenericT<::std::option::Option<::jlrs::data::managed::module::ModuleRef<'scope>>>,
@@ -134,7 +134,7 @@ end
         sb = Reflect.StringLayouts(b)
 
         sb[WithPropagatedLifetimes] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
         #[jlrs(julia_type = "Main.WithPropagatedLifetimes")]
         pub struct WithPropagatedLifetimes<'scope, 'data> {
             pub a: WithGenericT<::jlrs::data::layout::tuple::Tuple2<i32, WithGenericT<::std::option::Option<::jlrs::data::managed::array::ArrayRef<'scope, 'data>>>>>,

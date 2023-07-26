@@ -46,7 +46,7 @@ end
         sb = Reflect.StringLayouts(b)
 
         sb[HasAbstractField] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
         #[jlrs(julia_type = "Main.HasAbstractField")]
         pub struct HasAbstractField<'scope, 'data> {
             pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'scope, 'data>>,
@@ -58,7 +58,7 @@ end
         sb = Reflect.StringLayouts(b)
 
         sb[HasAbstractUnionAllField] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
         #[jlrs(julia_type = "Main.HasAbstractUnionAllField")]
         pub struct HasAbstractUnionAllField<'scope, 'data> {
             pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'scope, 'data>>,
@@ -72,7 +72,7 @@ end
         sb = Reflect.StringLayouts(b)
 
         sb[Reflect.basetype(HasGenericAbstractField)] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, IsBits, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.HasGenericAbstractField")]
         pub struct HasGenericAbstractField<T> {
             pub a: T,
@@ -84,14 +84,14 @@ end
         sb = Reflect.StringLayouts(b)
 
         sb[Reflect.basetype(HasGenericAbstractUnionAllField)] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, IsBits)]
         #[jlrs(julia_type = "Main.HasGenericAbstractUnionAllField")]
         pub struct HasGenericAbstractUnionAllField<U> {
             pub a: U,
         }
 
-        #[derive(ConstructType)]
-        #[jlrs(julia_type = "Main.HasGenericAbstractUnionAllField")]
+        #[derive(ConstructType, HasLayout)]
+        #[jlrs(julia_type = "Main.HasGenericAbstractUnionAllField", constructor_for = "HasGenericAbstractUnionAllField", scope_lifetime = false, data_lifetime = false, layout_params = ["U"], elided_params = ["T"], all_params = ["T", "U"])]
         pub struct HasGenericAbstractUnionAllFieldTypeConstructor<T, U> {
             _t: ::std::marker::PhantomData<T>,
             _u: ::std::marker::PhantomData<U>,

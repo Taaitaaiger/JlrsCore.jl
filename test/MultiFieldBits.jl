@@ -15,7 +15,7 @@ end
         sb = Reflect.StringLayouts(b)
 
         sb[BitsIntBool] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, ConstructType, CCallArg, CCallReturn)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, IsBits, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.BitsIntBool")]
         pub struct BitsIntBool {
             pub a: i64,
@@ -28,7 +28,7 @@ end
         sb = Reflect.StringLayouts(b)
 
         sb[BitsCharFloat32Float64] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, ConstructType, CCallArg, CCallReturn)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, IsBits, ConstructType, CCallArg, CCallReturn)]
         #[jlrs(julia_type = "Main.BitsCharFloat32Float64")]
         pub struct BitsCharFloat32Float64 {
             pub a: ::jlrs::data::layout::char::Char,

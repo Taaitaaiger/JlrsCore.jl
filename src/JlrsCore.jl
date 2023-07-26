@@ -4,7 +4,7 @@ using Base: @lock
 import Base: convert
 export set_pool_size, BorrowError, JlrsError, RustResult
 
-const JLRS_API_VERSION = 1
+const JLRS_API_VERSION = 2
 
 # TODO: Thread-safety
 const color = Ref{Bool}(false)
@@ -101,9 +101,11 @@ struct JlrsCatch
     error::Ptr{Cvoid}
 end
 
-function call_catch_wrapper(func::Ptr{Cvoid}, callback::Ptr{Cvoid}, trampoline::Ptr{Cvoid}, result::Ptr{Cvoid}, frame_slice::Ptr{Cvoid})::JlrsCatch
-    ccall(func, JlrsCatch, (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}), callback, trampoline, result, frame_slice)
+function call_catch_wrapper(func::Ptr{Cvoid}, callback::Ptr{Cvoid}, trampoline::Ptr{Cvoid}, result::Ptr{Cvoid})::JlrsCatch
+    ccall(func, JlrsCatch, (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}), callback, trampoline, result)
 end
+
+const call_catch_wrapper_c = Ref{Ptr{Cvoid}}()
 
 convert(::Type{T}, data::RustResult{T}) where {T} = data()
 convert(::Type{Nothing}, data::JlrsCore.RustResult{Nothing}) = data()
@@ -128,7 +130,7 @@ function root_module(package_name)
     @lock package_lock get(loaded_packages, package_name, nothing)
 end
 
-const root_module_c = Ref(Ptr{Cvoid}(C_NULL))
+const root_module_c = Ref{Ptr{Cvoid}}()
 
 # Adds the root module of this package to loaded_packages. This function is called automatically
 # when a package is loaded.
@@ -159,9 +161,8 @@ include("Reflect.jl")
 include("Wrap.jl")
 
 function __init__()
-    # Calling root_module as an extern "C" function from Rust is approximately twice as fast as
-    # using jl_call on my machine.
-    root_module_c[] = @cfunction(root_module, Any, (Symbol,))
+    root_module_c[] =  @cfunction(root_module, Any, (Symbol,))
+    call_catch_wrapper_c[] = @cfunction(call_catch_wrapper, JlrsCatch, (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}))
 
     @lock package_lock begin
         push!(Base.package_callbacks, add_to_loaded_packages)

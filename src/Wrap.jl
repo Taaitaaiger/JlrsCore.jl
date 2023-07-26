@@ -149,7 +149,7 @@ function build_function_expression(func::JlrsFunctionInfo, funcidx, julia_mod)
             GC.@preserve $(argsymbols...) begin
                 async_call = @inbounds ccall(__jlrswrap_pointers[$funcidx][1], $c_return_type, ($(c_arg_types...),), cond.handle, $(argsymbols...))
                 wait(cond)
-                ccall(async_call.join_func, Any, (Ptr{Cvoid},), async_call.join_handle)
+                ccall(async_call.join_func, $jl_return_type, (Ptr{Cvoid},), async_call.join_handle)
             end
         end
     end
