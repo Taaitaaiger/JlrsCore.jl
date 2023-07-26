@@ -556,7 +556,7 @@ function isnonparametric(type::Union)::Bool
 end
 
 function is_pointer_free_type(ty, env)
-    if !isdefined(ty, :types) 
+    if !isdefined(ty, :types)
         return true
     end
 
@@ -572,7 +572,7 @@ function is_pointer_free_type(ty, env)
                 end
             end
         elseif ty isa Union
-            return false           
+            return false
         elseif ty isa UnionAll
             ty2 = ty
             while ty2 isa UnionAll
@@ -1279,21 +1279,21 @@ function strlayout(layout::StructLayout, layouts::Dict{Type,Layout})::Union{Noth
     end
     push!(parts, "}")
 
-    if !is_constructible        
+    if !is_constructible
         # A separate type constructor is needed due to the presence of elided parameters.
 
         elided_param_names = map(filter(layout.typeparams) do x x.elide end) do x string(x.name) end
-        if isempty(elided_param_names) 
+        if isempty(elided_param_names)
             elided_param_names = "[]"
         end
 
         unelided_param_names = map(filter(layout.typeparams) do x !x.elide end) do x string(x.name) end
-        if isempty(unelided_param_names) 
+        if isempty(unelided_param_names)
             unelided_param_names = "[]"
         end
 
         param_names = map(param -> string(param.name), layout.typeparams)
-        if isempty(param_names) 
+        if isempty(param_names)
             param_names = "[]"
         end
 

@@ -25,7 +25,7 @@ end
         #[jlrs(julia_type = "Main.TypedEmpty")]
         pub struct TypedEmpty {
         }
-        
+
         #[derive(ConstructType, HasLayout)]
         #[jlrs(julia_type = "Main.TypedEmpty", constructor_for = "TypedEmpty", scope_lifetime = false, data_lifetime = false, layout_params = [], elided_params = ["T"], all_params = ["T"])]
         pub struct TypedEmptyTypeConstructor<T> {
