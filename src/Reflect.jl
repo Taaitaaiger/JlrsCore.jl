@@ -174,7 +174,7 @@ julia> using JlrsCore.Reflect
 
 julia> reflect([Complex])
 #[repr(C)]
-#[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg, CCallReturn)]
+#[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, IsBits, ConstructType, CCallArg, CCallReturn)]
 #[jlrs(julia_type = "Base.Complex")]
 pub struct Complex<T> {
     pub re: T,
@@ -221,7 +221,7 @@ julia> renamestruct!(layouts, Foo, "Bar")
 
 julia> layouts
 #[repr(C)]
-#[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, ConstructType)]
+#[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, IsBits, ConstructType)]
 #[jlrs(julia_type = "Main.Foo", zero_sized_type)]
 pub struct Bar {
 }
@@ -253,7 +253,7 @@ julia> renamefields!(layouts, Food, [:burger => "hamburger"])
 
 julia> layouts
 #[repr(C)]
-#[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, ConstructType, CCallArg, CCallReturn)]
+#[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, IsBits, ConstructType, CCallArg, CCallReturn)]
 #[jlrs(julia_type = "Main.Food")]
 pub struct Food {
     pub hamburger: ::jlrs::data::layout::bool::Bool,
@@ -296,7 +296,7 @@ julia> overridepath!(layouts, Foo, "Main.A.Bar")
 
 julia> layouts
 #[repr(C)]
-#[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, ConstructType)]
+#[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, IsBits, ConstructType)]
 #[jlrs(julia_type = "Main.A.Bar", zero_sized_type)]
 pub struct Foo {
 }
