@@ -55,4 +55,55 @@ function postblocking(func::Ptr{Cvoid}, task::Ptr{Cvoid}, wakeptr::Ptr{Cvoid})::
         end
     end
 end
+
+# If all handles are dropped before the main thread starts waiting,
+# notify_main can be called before wait_main is. Because both functions are
+# only called once, we need to check in wait_main whether we've already been
+# notified, and in notify_main if wait_main is waiting on the condition and
+# only notify the condition in that case.
+const wait_condition = Base.Threads.Condition()
+const wait_lock = Base.ReentrantLock()
+const has_waited = Ref(false)
+const was_notified = Ref(false)
+
+function wait_main()
+    lock(wait_lock)
+
+    if was_notified[] == false
+        has_waited[] = true
+        lock(wait_condition)
+
+        try
+            # Unlock wait_lock here so we don't hold it while we're waiting,
+            # that would deadlock with notify_main. wait_condition won't be
+            # unlocked until we've started waiting so notify_main can and 
+            # must notify it.
+            unlock(wait_lock)
+            wait(wait_condition)
+        finally
+            unlock(wait_condition)
+        end
+    else
+        unlock(wait_lock)
+    end
+end
+
+function notify_main()
+    lock(wait_lock)
+    was_notified[] = true
+
+    try
+        if has_waited[] == true
+            lock(wait_condition)
+
+            try
+                notify(wait_condition)
+            finally
+                unlock(wait_condition)
+            end
+        end
+    finally
+        unlock(wait_lock)
+    end
+end
 end

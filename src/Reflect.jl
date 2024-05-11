@@ -110,7 +110,7 @@ struct StringLayouts
 end
 
 """
-    reflect(types::Vector{<:Type}; f16::Bool=false, internaltypes::Bool=false)::Layouts
+    reflect(types::Vector{<:Type}; f16::Bool=false)::Layouts
 
 Generate Rust layouts and type constructors for all types in `types` and their dependencies. The
 only requirement is that these types must not contain any union or tuple fields that directly
@@ -154,12 +154,6 @@ traits will be implemented as long as their requirements are met:
   Mutable types don't implement this trait so they can't be used in Rust signatures directly,
   `TypedValue` must be used to guarantee the data is passed by reference rather than by value.
 
-Some types are only available in jlrs if the `internal-types` feature is enabled, if you've
-enabled this feature you can set the `internaltypes` keyword argument to `true` to make use of
-these provided layouts in the unlikely case that the types you're reflecting depend on them.
-Similarly, the `Float16` type can only be reflected when the `f16` feature is enabled in jlrs and
-the `f16` keyword argument is set to `true`.
-
 The result of this function can be written to a file, its contents should be a valid Rust module
 when the jlrs prelude is imported.
 
@@ -182,10 +176,10 @@ pub struct Complex<T> {
 }
 ```
 """
-function reflect(types::Vector{<:Type}; f16::Bool=false, internaltypes::Bool=false)::Layouts
+function reflect(types::Vector{<:Type}; f16::Bool=false, complex::Bool=false)::Layouts
     deps = Dict{DataType,Set{DataType}}()
     layouts = Dict{Type,Layout}()
-    insertbuiltins!(layouts; f16, internaltypes)
+    insertbuiltins!(layouts; f16, complex)
 
     for ty in types
         extractdeps!(deps, ty, layouts)
@@ -421,7 +415,7 @@ function basetype(type::UnionAll)::DataType
 end
 
 # Populates `BUILTINS`
-function insertbuiltins!(layouts::Dict{Type,Layout}; f16::Bool=false, internaltypes::Bool=false)::Nothing
+function insertbuiltins!(layouts::Dict{Type,Layout}; f16::Bool=false, complex::Bool=false)::Nothing
     layouts[UInt8] = BuiltinLayout("u8", [], false, false, false)
     layouts[UInt16] = BuiltinLayout("u16", [], false, false, false)
     layouts[UInt32] = BuiltinLayout("u32", [], false, false, false)
@@ -437,17 +431,14 @@ function insertbuiltins!(layouts::Dict{Type,Layout}; f16::Bool=false, internalty
         layouts[Float16] = UnsupportedLayout("Layouts with Float16 fields can only be generated when f16 is set to true.")
     end
 
+    if complex
+        layouts[basetype(Complex)] = BuiltinLayout("::num::Complex", [StructParameter(:T, false)], false, false, false)
+    end
+
     layouts[Float32] = BuiltinLayout("f32", [], false, false, false)
     layouts[Float64] = BuiltinLayout("f64", [], false, false, false)
     layouts[Bool] = BuiltinLayout("::jlrs::data::layout::bool::Bool", [], false, false, false)
     layouts[Char] = BuiltinLayout("::jlrs::data::layout::char::Char", [], false, false, false)
-
-    if internaltypes
-        layouts[Core.SSAValue] = BuiltinLayout("::jlrs::data::layout::ssa_value::SSAValue", [], false, false, false)
-    else
-        layouts[Core.SSAValue] = UnsupportedLayout("Layouts with Core.SSAValue fields can only be generated when internaltypes is set to true.")
-    end
-
     layouts[Union{}] = BuiltinLayout("::jlrs::data::layout::union::EmptyUnion", [], false, false, false)
 
     layouts[Any] = BuiltinLayout("::jlrs::data::managed::value::ValueRef", [], true, true, true)
@@ -462,35 +453,7 @@ function insertbuiltins!(layouts::Dict{Type,Layout}; f16::Bool=false, internalty
     layouts[TypeVar] = BuiltinLayout("::jlrs::data::managed::type_var::TypeVarRef", [], true, false, true)
     layouts[Union] = BuiltinLayout("::jlrs::data::managed::union::UnionRef", [], true, false, true)
     layouts[UnionAll] = BuiltinLayout("::jlrs::data::managed::union_all::UnionAllRef", [], true, false, true)
-
-    if internaltypes
-        layouts[Core.CodeInstance] = BuiltinLayout("::jlrs::data::managed::internal::code_instance::CodeInstanceRef", [], true, false, true)
-        layouts[Expr] = BuiltinLayout("::jlrs::data::managed::internal::expr::ExprRef", [], true, false, true)
-        layouts[Method] = BuiltinLayout("::jlrs::data::managed::internal::method::MethodRef", [], true, false, true)
-        layouts[Core.MethodInstance] = BuiltinLayout("::jlrs::data::managed::internal::method_instance::MethodInstanceRef", [], true, false, true)
-        layouts[Core.MethodMatch] = BuiltinLayout("::jlrs::data::managed::internal::method_match::MethodMatchRef", [], true, false, true)
-        layouts[Core.MethodTable] = BuiltinLayout("::jlrs::data::managed::internal::method_table::MethodTableRef", [], true, false, true)
-        if isdefined(Core, :OpaqueClosure)
-            layouts[basetype(Core.OpaqueClosure)] = BuiltinLayout("::jlrs::data::managed::internal::opaque_closure::OpaqueClosureRef", [], true, false, true)
-        end
-        layouts[Core.TypeMapEntry] = BuiltinLayout("::jlrs::data::managed::internal::typemap_entry::TypeMapEntryRef", [], true, false, true)
-        layouts[Core.TypeMapLevel] = BuiltinLayout("::jlrs::data::managed::internal::typemap_level::TypeMapLevelRef", [], true, false, true)
-        layouts[WeakRef] = BuiltinLayout("::jlrs::data::managed::weak_ref::WeakRefRef", [], true, false, true)
-    else
-        layouts[Core.CodeInstance] = BuiltinLayout("::jlrs::data::managed::value::ValueRef", [], true, true, true)
-        layouts[Expr] = BuiltinLayout("::jlrs::data::managed::value::ValueRef", [], true, true, true)
-        layouts[Method] = BuiltinLayout("::jlrs::data::managed::value::ValueRef", [], true, true, true)
-        layouts[Core.MethodInstance] = BuiltinLayout("::jlrs::data::managed::value::ValueRef", [], true, true, true)
-        layouts[Core.MethodMatch] = BuiltinLayout("::jlrs::data::managed::value::ValueRef", [], true, true, true)
-        layouts[Core.MethodTable] = BuiltinLayout("::jlrs::data::managed::value::ValueRef", [], true, true, true)
-        if isdefined(Core, :OpaqueClosure)
-            layouts[basetype(Core.OpaqueClosure)] = BuiltinLayout("::jlrs::data::managed::value::ValueRef", [], true, true, true)
-        end
-        layouts[Core.Method] = BuiltinLayout("::jlrs::data::managed::value::ValueRef", [], true, true, true)
-        layouts[Core.TypeMapEntry] = BuiltinLayout("::jlrs::data::managed::value::ValueRef", [], true, true, true)
-        layouts[Core.TypeMapLevel] = BuiltinLayout("::jlrs::data::managed::value::ValueRef", [], true, true, true)
-        layouts[WeakRef] = BuiltinLayout("::jlrs::data::managed::value::ValueRef", [], true, true, true)
-    end
+    layouts[Expr] = BuiltinLayout("::jlrs::data::managed::expr::ExprRef", [], true, false, true)
 
     layouts[Core.AbstractChar] = BuiltinAbstractLayout()
     layouts[Core.AbstractFloat] = BuiltinAbstractLayout()
@@ -662,6 +625,10 @@ function extractdeps!(acc::Dict{DataType,Set{DataType}}, @nospecialize(type::Typ
 
             for btype in base.types
                 if btype isa DataType
+                    if ismutabletype(btype)
+                        continue
+                    end
+                    
                     if btype <: Tuple
                         if findfirst(btype.parameters) do p
                             p isa TypeVar
@@ -678,12 +645,15 @@ function extractdeps!(acc::Dict{DataType,Set{DataType}}, @nospecialize(type::Typ
                         extractdeps!(acc, btype, layouts)
                     end
                 elseif btype isa UnionAll
-                    extractdeps!(acc, btype, layouts)
+                    continue
                 elseif btype isa Union
                     if !isnonparametric(btype)
                         error("Unions with type parameters are not supported")
                     end
-                    extractdeps!(acc, btype, layouts)
+
+                    if Base.isbitsunion(btype)
+                        extractdeps!(acc, btype, layouts)
+                    end
                 end
             end
         end
@@ -845,6 +815,8 @@ function structfield(fieldname::Symbol, @nospecialize(fieldtype::Union{Type,Type
                 references = extractparams(fieldtype, layouts)
                 StructField(fieldname, string(fieldname), fieldlayout, tparams, references, fieldlayout.scopelifetime, fieldlayout.datalifetime, false)
             end
+        elseif ismutabletype(fieldtype)
+            StructField(fieldname, string(fieldname), layouts[Any], [], Set(), true, true, false)
         elseif Base.uniontype_layout(fieldtype)[1]
             StructField(fieldname, string(fieldname), layouts[Any], [], Set(), true, true, false)
         else
@@ -1246,7 +1218,7 @@ function strlayout(layout::StructLayout, layouts::Dict{Type,Layout})::Union{Noth
     traits = ["Clone", "Debug", "Unbox", "ValidLayout", "Typecheck"]
     into_julia && push!(traits, "IntoJulia")
     is_mut || push!(traits, "ValidField")
-    is_bits && push!(traits, "IsBits")
+    !is_mut && is_bits && push!(traits, "IsBits")
     is_constructible && push!(traits, "ConstructType")
     is_constructible && !is_zst && !is_mut && push!(traits, "CCallArg")
 

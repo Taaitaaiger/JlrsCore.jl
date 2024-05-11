@@ -1,56 +1,14 @@
 module JlrsCore
 
 using Base: @lock
-import Base: convert
-export set_pool_size, BorrowError, JlrsError, RustResult
+export BorrowError, JlrsError
 
-const JLRS_API_VERSION = 2
+const JLRS_API_VERSION = 3
 
 # TODO: Thread-safety
 const color = Ref{Bool}(false)
 
-struct Pool
-    set_pool_size_fn::Ptr{Cvoid}
-end
-
-const pools = Dict{Module,Pool}()
 const init_lock = ReentrantLock()
-
-"""
-    set_pool_size(mod, size)
-
-Sets the size of the thread pool if one is available for the module. A module has a thread pool
-if it was created with jlrs' `julia_module` macro, the pool is used to execute callbacks without
-blocking Julia.
-
-The size of the pool must be larger than 0, otherwise an `ArgumentError` is thrown. If no pool is
-known for the module, a `KeyError` is thrown. No active threads are killed by calling this
-function.
-"""
-function set_pool_size(mod::Module, size::Unsigned)
-    if size == 0
-        throw(ArgumentError("size must be greater than 0"))
-    end
-
-    @lock init_lock begin
-        set_pool_size_fn = pools[mod].set_pool_size_fn
-        ccall(set_pool_size_fn, Cvoid, (UInt,), size)
-    end
-
-    nothing
-end
-
-function add_pool(mod::Module, set_pool_size_fn::Ptr{Cvoid})
-    @lock init_lock begin
-        if haskey(pools, mod)
-            throw(ErrorException("Pool for module $mod already exists"))
-        end
-
-        pools[mod] = Pool(set_pool_size_fn)
-    end
-
-    nothing
-end
 
 # Call show and write the output to a string.
 function valuestring(value)::String
@@ -78,24 +36,6 @@ struct JlrsError <: Exception
     msg::String
 end
 
-"""
-A pending exception.
-
-Throwing a Julia exception directly from Rust is generally unsound. A RustResult contains either a
-value of type T, or an exception. If is_exc is false, the data is converted to T and returned,
-otherwise the exception is thrown.
-
-Sometimes this conversion is ambiguous. This can typically be solved by providing a custom
-implementation of `convert`, which can be implemented as
-`Base.convert(::Type{T}, data::RustResult{T}) = data()`
-where T has to be replaced with the problematic type. When this error occurs, the correct
-signature is part of the error message.
-"""
-mutable struct RustResult{T}
-    data
-    is_exc::Bool
-end
-
 struct JlrsCatch
     tag::UInt32
     error::Ptr{Cvoid}
@@ -103,20 +43,6 @@ end
 
 function call_catch_wrapper(func::Ptr{Cvoid}, callback::Ptr{Cvoid}, trampoline::Ptr{Cvoid}, result::Ptr{Cvoid})::JlrsCatch
     ccall(func, JlrsCatch, (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}), callback, trampoline, result)
-end
-
-const call_catch_wrapper_c = Ref{Ptr{Cvoid}}()
-
-convert(::Type{T}, data::RustResult{T}) where {T} = data()
-convert(::Type{Nothing}, data::JlrsCore.RustResult{Nothing}) = data()
-convert(::Type{Any}, data::JlrsCore.RustResult{Any}) = data()
-
-function (res::RustResult{T})() where {T}
-    if res.is_exc
-        throw(res.data)
-    else
-        return res.data
-    end
 end
 
 # A Dict containing the root modules of all loaded packages is maintained to be able to
@@ -149,12 +75,15 @@ function unlock_init_lock()
     unlock(init_lock)
 end
 
+
 if VERSION.minor >= 9
     include("Threads-9-x.jl")
+    include("DelegatedTask.jl")
 else
     include("Threads-6-8.jl")
 end
 
+include("BackgroundTask.jl")
 include("Ledger.jl")
 include("Reflect.jl")
 
@@ -162,7 +91,6 @@ include("Wrap.jl")
 
 function __init__()
     root_module_c[] =  @cfunction(root_module, Any, (Symbol,))
-    call_catch_wrapper_c[] = @cfunction(call_catch_wrapper, JlrsCatch, (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}))
 
     @lock package_lock begin
         push!(Base.package_callbacks, add_to_loaded_packages)

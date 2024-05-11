@@ -114,8 +114,8 @@ end
         sb[WithExpr] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
         #[jlrs(julia_type = "Main.WithExpr")]
-        pub struct WithExpr<'scope, 'data> {
-            pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'scope, 'data>>,
+        pub struct WithExpr<'scope> {
+            pub a: ::std::option::Option<::jlrs::data::managed::expr::ExprRef<'scope>>,
         }"""
     end
 
@@ -288,14 +288,14 @@ end
     end
 
     @test begin
-        b = Reflect.reflect([WithCodeInstance]; internaltypes=true)
+        b = Reflect.reflect([WithCodeInstance])
         sb = Reflect.StringLayouts(b)
 
         sb[WithCodeInstance] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
         #[jlrs(julia_type = "Main.WithCodeInstance")]
-        pub struct WithCodeInstance<'scope> {
-            pub a: ::std::option::Option<::jlrs::data::managed::internal::code_instance::CodeInstanceRef<'scope>>,
+        pub struct WithCodeInstance<'scope, 'data> {
+            pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'scope, 'data>>,
         }"""
     end
 
@@ -326,74 +326,74 @@ end
     end
 
     @test begin
-        b = Reflect.reflect([WithExpr]; internaltypes=true)
+        b = Reflect.reflect([WithExpr])
         sb = Reflect.StringLayouts(b)
 
         sb[WithExpr] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
         #[jlrs(julia_type = "Main.WithExpr")]
         pub struct WithExpr<'scope> {
-            pub a: ::std::option::Option<::jlrs::data::managed::internal::expr::ExprRef<'scope>>,
+            pub a: ::std::option::Option<::jlrs::data::managed::expr::ExprRef<'scope>>,
         }"""
     end
 
     @test begin
-        b = Reflect.reflect([WithMethod]; internaltypes=true)
+        b = Reflect.reflect([WithMethod])
         sb = Reflect.StringLayouts(b)
 
         sb[WithMethod] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
         #[jlrs(julia_type = "Main.WithMethod")]
-        pub struct WithMethod<'scope> {
-            pub a: ::std::option::Option<::jlrs::data::managed::internal::method::MethodRef<'scope>>,
+        pub struct WithMethod<'scope, 'data> {
+            pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'scope, 'data>>,
         }"""
     end
 
     @test begin
-        b = Reflect.reflect([WithMethodInstance]; internaltypes=true)
+        b = Reflect.reflect([WithMethodInstance])
         sb = Reflect.StringLayouts(b)
 
         sb[WithMethodInstance] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
         #[jlrs(julia_type = "Main.WithMethodInstance")]
-        pub struct WithMethodInstance<'scope> {
-            pub a: ::std::option::Option<::jlrs::data::managed::internal::method_instance::MethodInstanceRef<'scope>>,
+        pub struct WithMethodInstance<'scope, 'data> {
+            pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'scope, 'data>>,
         }"""
     end
 
     @test begin
-        b = Reflect.reflect([WithMethodTable]; internaltypes=true)
+        b = Reflect.reflect([WithMethodTable])
         sb = Reflect.StringLayouts(b)
 
         sb[WithMethodTable] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
         #[jlrs(julia_type = "Main.WithMethodTable")]
-        pub struct WithMethodTable<'scope> {
-            pub a: ::std::option::Option<::jlrs::data::managed::internal::method_table::MethodTableRef<'scope>>,
+        pub struct WithMethodTable<'scope, 'data> {
+            pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'scope, 'data>>,
         }"""
     end
 
     @test begin
-        b = Reflect.reflect([WithTypeMapEntry]; internaltypes=true)
+        b = Reflect.reflect([WithTypeMapEntry])
         sb = Reflect.StringLayouts(b)
 
         sb[WithTypeMapEntry] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
         #[jlrs(julia_type = "Main.WithTypeMapEntry")]
-        pub struct WithTypeMapEntry<'scope> {
-            pub a: ::std::option::Option<::jlrs::data::managed::internal::typemap_entry::TypeMapEntryRef<'scope>>,
+        pub struct WithTypeMapEntry<'scope, 'data> {
+            pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'scope, 'data>>,
         }"""
     end
 
     @test begin
-        b = Reflect.reflect([WithTypeMapLevel]; internaltypes=true)
+        b = Reflect.reflect([WithTypeMapLevel])
         sb = Reflect.StringLayouts(b)
 
         sb[WithTypeMapLevel] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
         #[jlrs(julia_type = "Main.WithTypeMapLevel")]
-        pub struct WithTypeMapLevel<'scope> {
-            pub a: ::std::option::Option<::jlrs::data::managed::internal::typemap_level::TypeMapLevelRef<'scope>>,
+        pub struct WithTypeMapLevel<'scope, 'data> {
+            pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'scope, 'data>>,
         }"""
     end
 end

@@ -7,23 +7,18 @@ import Libdl
 import JlrsCore
 import Base.Docs: Binding, docstr, doc!
 
-export @wrapmodule, @initjlrs, AsyncCCall
+export @wrapmodule, @initjlrs
 
 # Encapsulate information about a function
 mutable struct JlrsFunctionInfo
     name::Any
-    ccall_argument_types::Array{Type,1}
-    julia_argument_types::Array{Type,1}
+    ccall_argument_types::Vector{Type}
+    julia_argument_types::Vector{Any}
     ccall_return_type::Type
-    julia_return_type::Type
+    julia_return_type::Any
     function_pointer::Ptr{Cvoid}
     override_module::Module
-    async_func::Bool
-end
-
-struct AsyncCCall
-    join_handle::Ptr{Cvoid}
-    join_func::Ptr{Cvoid}
+    environment::Core.SimpleVector
 end
 
 struct DocItem
@@ -127,6 +122,84 @@ end
 
 make_func_declaration(fn, argmap, julia_mod) = :($(process_fname(fn, julia_mod))($(argmap...)))
 
+function flatten_union!(out::Vector{Any}, u::Union)
+    flatten_union!(out, u.a)
+    flatten_union!(out, u.b)
+    nothing
+end
+
+function flatten_union!(out::Vector{Any}, u::Any)
+    push!(out, u)
+    nothing
+end
+
+function base_type(u::UnionAll)
+    body = u.body
+    if body isa UnionAll
+        return base_type(body)
+    end
+
+    body
+end
+
+function type_to_expr(ty::DataType)
+    if length(ty.parameters) > 0 
+        params = map(type_to_expr, ty.parameters)
+        Expr(:curly, ty.name.name, params...)
+    else
+        ty.name.name
+    end
+end
+
+function type_to_expr(tv::TypeVar)
+    tv.name
+end
+
+function type_to_expr(u::Union)
+    flattened = []
+    flatten_union!(flattened, u)
+    without_tv = map(type_to_expr, flattened)
+    Expr(:curly, :Union, without_tv...)
+end
+
+function type_to_expr(u::UnionAll)
+    flattened = []
+    base_ty = base_type(u).name.wrapper
+
+    while u isa UnionAll
+        if u.var != base_ty.var
+            push!(flattened, type_to_expr(u.var))
+        end
+
+        u = u.body
+        base_ty = base_ty.body
+    end
+
+    Expr(:curly, u.name.name, flattened...)
+end
+
+function type_to_expr(tv)
+    tv
+end
+
+function envmap(tvar::Core.TypeVar)
+    name = tvar.name
+    ub = tvar.ub
+    lb = tvar.lb
+
+    if ub === Any && lb === Union{}
+        return name
+    end
+
+    ub = type_to_expr(ub)
+    if lb === Union{}
+        return :($name <: $ub)
+    end
+
+    lb = type_to_expr(lb)
+    return :($lb <: $name <: $ub)
+end
+
 # Build the expression to wrap the given function
 function build_function_expression(func::JlrsFunctionInfo, funcidx, julia_mod)
     # Arguments and types
@@ -138,33 +211,22 @@ function build_function_expression(func::JlrsFunctionInfo, funcidx, julia_mod)
     c_return_type = func.ccall_return_type
     jl_return_type = func.julia_return_type
 
-    # Build the final call expression
-    call_exp = if !func.async_func
-        quote
-            @inbounds ccall(__jlrswrap_pointers[$funcidx][1], $c_return_type, ($(c_arg_types...),), $(argsymbols...))
-        end
-    else
-        quote
-            cond = Base.AsyncCondition()
-            GC.@preserve $(argsymbols...) begin
-                async_call = @inbounds ccall(__jlrswrap_pointers[$funcidx][1], $c_return_type, ($(c_arg_types...),), cond.handle, $(argsymbols...))
-                wait(cond)
-                ccall(async_call.join_func, $jl_return_type, (Ptr{Cvoid},), async_call.join_handle)
-            end
-        end
-    end
-
     function argmap(signature)
         result = Expr[]
-        for (t, s) in zip(signature, argsymbols)
-          push!(result, :($s::$t))
+        for (ty, sym) in zip(signature, argsymbols)
+            ty = type_to_expr(ty)
+            push!(result, :($sym::$ty))
         end
 
-        return result
-      end
+        result
+    end
 
-    function_expression = :($(make_func_declaration((func.name,func.override_module), argmap(argtypes), julia_mod))::$(jl_return_type) = $call_exp)
-    return function_expression
+    decl = :($(make_func_declaration((func.name,func.override_module), argmap(argtypes), julia_mod))::$(jl_return_type))
+    if length(func.environment) > 0 
+        decl = Expr(:where, decl, map(envmap, func.environment)...)
+    end
+
+    return :($decl = @inbounds ccall(__jlrswrap_pointers[$funcidx][1], $c_return_type, ($(c_arg_types...),), $(argsymbols...)))
 end
 
 # Wrap functions from the JlrsCore module to the passed julia module

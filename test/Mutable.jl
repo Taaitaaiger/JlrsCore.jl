@@ -36,7 +36,7 @@ end
         sb = Reflect.StringLayouts(b)
 
         sb[MutF32] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IsBits, ConstructType)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ConstructType)]
         #[jlrs(julia_type = "Main.MutF32")]
         pub struct MutF32 {
             pub a: f32,
@@ -53,6 +53,11 @@ end
         pub struct MutNested<'scope, 'data> {
             pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'scope, 'data>>,
         }"""
+    end
+
+    @test begin
+        b = Reflect.reflect([MutNested])
+        !(MutF32 in keys(b.dict))
     end
 
     @test begin
@@ -96,7 +101,7 @@ end
         sb = Reflect.StringLayouts(b)
 
         sb[Reflect.basetype(HasGeneric)] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IsBits, ConstructType)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ConstructType)]
         #[jlrs(julia_type = "Main.HasGeneric")]
         pub struct HasGeneric<T> {
             pub a: T,
