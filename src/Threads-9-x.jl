@@ -44,17 +44,6 @@ scheduleasynclocal(func::Function, args...; kwargs...)::Task = interactivecall(f
 scheduleasync(func::Function, wakeptr::Ptr{Cvoid}, args...; kwargs...)::Task = asynccall(func, wakeptr, args...; kwargs...)
 scheduleasync(func::Function, args...; kwargs...)::Task = asynccall(func, args...; kwargs...)
 
-function postblocking(func::Ptr{Cvoid}, task::Ptr{Cvoid}, wakeptr::Ptr{Cvoid})::Task
-    Base.Threads.@spawn :default begin
-        try
-            ccall(func, Cvoid, (Ptr{Cvoid},), task)
-        finally
-            if wakeptr != C_NULL
-                ccall(wakerust[], Cvoid, (Ptr{Cvoid},), wakeptr)
-            end
-        end
-    end
-end
 
 # If all handles are dropped before the main thread starts waiting,
 # notify_main can be called before wait_main is. Because both functions are
@@ -76,7 +65,7 @@ function wait_main()
         try
             # Unlock wait_lock here so we don't hold it while we're waiting,
             # that would deadlock with notify_main. wait_condition won't be
-            # unlocked until we've started waiting so notify_main can and 
+            # unlocked until we've started waiting so notify_main can and
             # must notify it.
             unlock(wait_lock)
             wait(wait_condition)

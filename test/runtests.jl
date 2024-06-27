@@ -4,6 +4,7 @@ using JlrsCore.Ledger
 using Test
 
 include("Ledger.jl")
+include("Enum.jl")
 include("AbstractTypes.jl")
 include("SingleFieldBits.jl")
 include("Mutable.jl")

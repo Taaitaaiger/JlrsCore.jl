@@ -24,7 +24,7 @@ mutable struct StructField
     rsname::String
     fieldtype::Layout
     typeparams::Vector{TypeParameter}
-    referenced::Set{TypeVar}
+    referenced::IdSet{TypeVar}
     scopelifetime::Bool
     datalifetime::Bool
     asvalue::Bool
@@ -94,6 +94,20 @@ struct BuiltinLayout <: Layout
     pointerfield::Bool
 end
 
+mutable struct EnumVariant
+    name::Symbol
+    rsname::String
+    value
+end
+
+mutable struct EnumLayout <: Layout
+    name::Symbol
+    type::DataType
+    rsname::String
+    path::String
+    fields::Vector{EnumVariant}
+end
+
 struct BuiltinAbstractLayout <: Layout
 end
 
@@ -102,11 +116,11 @@ struct UnsupportedLayout <: Layout
 end
 
 struct Layouts
-    dict::Dict{Type,Layout}
+    dict::IdDict{DataType,Layout}
 end
 
 struct StringLayouts
-    dict::Dict{Type,String}
+    dict::IdDict{DataType,String}
 end
 
 """
@@ -177,9 +191,18 @@ pub struct Complex<T> {
 ```
 """
 function reflect(types::Vector{<:Type}; f16::Bool=false, complex::Bool=false)::Layouts
-    deps = Dict{DataType,Set{DataType}}()
-    layouts = Dict{Type,Layout}()
-    insertbuiltins!(layouts; f16, complex)
+    deps = IdDict{DataType,IdSet{DataType}}()
+    layouts = copy(BUILTINS)
+
+    if f16
+        layouts[Float16] = BuiltinLayout("::half::f16", [], false, false, false)
+    else
+        layouts[Float16] = UnsupportedLayout("Layouts with Float16 fields can only be generated when f16 is set to true.")
+    end
+
+    if complex
+        layouts[basetype(Complex)] = BuiltinLayout("::num::Complex", [StructParameter(:T, false)], false, false, false)
+    end
 
     for ty in types
         extractdeps!(deps, ty, layouts)
@@ -310,7 +333,7 @@ if VERSION.minor == 6
 end
 
 function StringLayouts(layouts::Layouts)
-    strlayouts = Dict{Type,String}()
+    strlayouts = IdDict{DataType,String}()
 
     for name in keys(layouts.dict)
         rustimpl = strlayout(layouts.dict[name], layouts.dict)
@@ -362,27 +385,56 @@ function write(io::IO, layouts::Layouts)
     write(io, join(rustimpls, "\n\n"))
 end
 
-function toposort!(data::Dict{DataType,Set{DataType}})::Vector{Type}
-    for (k, v) in data
-        delete!(v, k)
+function toposort!(data::IdDict{DataType, IdSet{DataType}})::Vector{DataType}
+    all_deps = IdSet{DataType}()
+
+    for p in data
+        # Self-referential types depend on themselves
+        delete!(p.second, p.first)
+        # Add the dependcies to the set of all dependencies
+        union!(all_deps, p.second)
     end
 
-    for item in setdiff(reduce(∪, values(data)), keys(data))
-        data[item] = Set()
+    # Any type that is present in the dependencies but not in `data` has no dependencies
+    setdiff!(all_deps, keys(data))
+    for ty in all_deps
+        data[ty] = IdSet()
     end
 
-    rst = Vector()
+    sorted = Vector{DataType}()
+    sizehint!(sorted, length(data))
+
+    types_without_deps = IdSet{DataType}()
+
     while true
-        ordered = Set(item for (item, dep) in data if isempty(dep))
-        if isempty(ordered)
+        empty!(types_without_deps)
+
+        # Find types with no remaining dependencies
+        for (ty::DataType, deps) in data
+            if isempty(deps)
+                push!(types_without_deps, ty)
+            end
+        end
+
+        # If there are no types without dependencies, we're done.
+        if isempty(types_without_deps)
             break
         end
-        append!(rst, ordered)
-        data = Dict(item => setdiff(dep, ordered) for (item, dep) in data if item ∉ ordered)
+
+        # Add the types without dependencies to the list of results.
+        append!(sorted, types_without_deps)
+
+        # Remove types we've just added to `rst` from `data`
+        filter!(data) do p
+            retain = p.first ∉ types_without_deps
+            # If the type is retained, remove types_without_deps from its deps
+            retain && setdiff!(p.second, types_without_deps)
+            retain
+        end
     end
 
     @assert isempty(data) "a cyclic dependency exists amongst $(keys(data))"
-    rst
+    sorted
 end
 
 # The innermost `body` of a `UnionAll`
@@ -415,7 +467,7 @@ function basetype(type::UnionAll)::DataType
 end
 
 # Populates `BUILTINS`
-function insertbuiltins!(layouts::Dict{Type,Layout}; f16::Bool=false, complex::Bool=false)::Nothing
+function insertbuiltins!(layouts::IdDict{DataType,Layout})::Nothing
     layouts[UInt8] = BuiltinLayout("u8", [], false, false, false)
     layouts[UInt16] = BuiltinLayout("u16", [], false, false, false)
     layouts[UInt32] = BuiltinLayout("u32", [], false, false, false)
@@ -425,21 +477,11 @@ function insertbuiltins!(layouts::Dict{Type,Layout}; f16::Bool=false, complex::B
     layouts[Int32] = BuiltinLayout("i32", [], false, false, false)
     layouts[Int64] = BuiltinLayout("i64", [], false, false, false)
 
-    if f16
-        layouts[Float16] = BuiltinLayout("::half::f16", [], false, false, false)
-    else
-        layouts[Float16] = UnsupportedLayout("Layouts with Float16 fields can only be generated when f16 is set to true.")
-    end
-
-    if complex
-        layouts[basetype(Complex)] = BuiltinLayout("::num::Complex", [StructParameter(:T, false)], false, false, false)
-    end
-
     layouts[Float32] = BuiltinLayout("f32", [], false, false, false)
     layouts[Float64] = BuiltinLayout("f64", [], false, false, false)
     layouts[Bool] = BuiltinLayout("::jlrs::data::layout::bool::Bool", [], false, false, false)
     layouts[Char] = BuiltinLayout("::jlrs::data::layout::char::Char", [], false, false, false)
-    layouts[Union{}] = BuiltinLayout("::jlrs::data::layout::union::EmptyUnion", [], false, false, false)
+    layouts[typeof(Union{})] = BuiltinLayout("::jlrs::data::layout::union::EmptyUnion", [], false, false, false)
 
     layouts[Any] = BuiltinLayout("::jlrs::data::managed::value::ValueRef", [], true, true, true)
     layouts[basetype(Array)] = BuiltinLayout("::jlrs::data::managed::array::ArrayRef", [StructParameter(:T, true), StructParameter(:N, true)], true, true, true)
@@ -498,7 +540,7 @@ end
 
 # Layouts provided by jlrs
 const BUILTINS = begin
-    d = Dict{Type,Layout}()
+    d = IdDict{DataType,Layout}()
     insertbuiltins!(d)
     d
 end
@@ -568,7 +610,7 @@ function has_pointer_free_partialtype(ty, env)
     is_pointer_free_type(partialty, env)
 end
 
-function extracttupledeps_notconcrete!(acc::Dict{DataType,Set{DataType}}, type::DataType, layouts::Dict{Type,Layout})::Nothing
+function extracttupledeps_notconcrete!(acc::IdDict{DataType,IdSet{DataType}}, type::DataType, layouts::IdDict{DataType,Layout})::Nothing
     for ttype in type.types
         extractdeps!(acc, ttype, layouts)
     end
@@ -576,7 +618,7 @@ function extracttupledeps_notconcrete!(acc::Dict{DataType,Set{DataType}}, type::
     nothing
 end
 
-function extracttupledeps!(acc::Dict{DataType,Set{DataType}}, key::DataType, type::DataType, layouts::Dict{Type,Layout})::Nothing
+function extracttupledeps!(acc::IdDict{DataType,IdSet{DataType}}, key::DataType, type::DataType, layouts::IdDict{DataType,Layout})::Nothing
     for ttype in type.types
         if ttype isa DataType
             if ttype <: Tuple
@@ -607,7 +649,7 @@ function hasatomicfields(type::DataType)::Bool
     false
 end
 
-function extractdeps!(acc::Dict{DataType,Set{DataType}}, @nospecialize(type::Type), layouts::Dict{Type,Layout})::Nothing
+function extractdeps!(acc::IdDict{DataType,IdSet{DataType}}, @nospecialize(type::Type), layouts::IdDict{DataType,Layout})::Nothing
     if type isa DataType
         if type <: Tuple
             return extracttupledeps_notconcrete!(acc, type, layouts)
@@ -621,14 +663,14 @@ function extractdeps!(acc::Dict{DataType,Set{DataType}}, @nospecialize(type::Typ
         end
 
         if !(base in keys(acc)) && !(base in keys(layouts))
-            acc[base] = Set()
+            acc[base] = IdSet()
 
             for btype in base.types
                 if btype isa DataType
                     if ismutabletype(btype)
                         continue
                     end
-                    
+
                     if btype <: Tuple
                         if findfirst(btype.parameters) do p
                             p isa TypeVar
@@ -683,8 +725,8 @@ function extractdeps!(acc::Dict{DataType,Set{DataType}}, @nospecialize(type::Typ
     nothing
 end
 
-function extractparams(@nospecialize(ty::Type), layouts::Dict{Type,Layout})::Set{TypeVar}
-    out = Set()
+function extractparams(@nospecialize(ty::Type), layouts::IdDict{DataType,Layout})::IdSet{TypeVar}
+    out = IdSet()
     if ty <: Tuple
         for elty in ty.parameters
             union!(out, extractparams(elty, layouts))
@@ -720,7 +762,7 @@ function extractparams(@nospecialize(ty::Type), layouts::Dict{Type,Layout})::Set
     out
 end
 
-function concretetuplefield(@nospecialize(tuple::Type), layouts::Dict{Type,Layout})::TupleLayout
+function concretetuplefield(@nospecialize(tuple::Type), layouts::IdDict{DataType,Layout})::TupleLayout
     scopelifetime = false
     datalifetime = false
     fieldlayouts::Vector{TupleField} = []
@@ -768,9 +810,9 @@ function concretetuplefield(@nospecialize(tuple::Type), layouts::Dict{Type,Layou
 end
 
 
-function structfield(fieldname::Symbol, @nospecialize(fieldtype::Union{Type,TypeVar}), layouts::Dict{Type,Layout})::StructField
+function structfield(fieldname::Symbol, @nospecialize(fieldtype::Union{Type,TypeVar}), layouts::IdDict{DataType,Layout})::StructField
     if fieldtype isa TypeVar
-        StructField(fieldname, string(fieldname), GenericLayout(fieldtype.name), [TypeParameter(fieldtype.name, fieldtype)], Set([fieldtype]), false, false, false)
+        StructField(fieldname, string(fieldname), GenericLayout(fieldtype.name), [TypeParameter(fieldtype.name, fieldtype)], IdSet{TypeVar}([fieldtype]), false, false, false)
     elseif fieldtype isa UnionAll
         bt = basetype(fieldtype)
 
@@ -782,53 +824,57 @@ function structfield(fieldname::Symbol, @nospecialize(fieldtype::Union{Type,Type
             references = extractparams(bt, layouts)
             StructField(fieldname, string(fieldname), fieldlayout, tparams, references, fieldlayout.scopelifetime, fieldlayout.datalifetime, false)
         else
-            StructField(fieldname, string(fieldname), layouts[Any], [], Set(), true, true, false)
+            StructField(fieldname, string(fieldname), layouts[Any], [], IdSet(), true, true, false)
         end
     elseif fieldtype isa Union
         if Base.isbitsunion(fieldtype)
-            StructField(fieldname, string(fieldname), BitsUnionLayout(fieldtype), [], Set(), false, false, false)
+            StructField(fieldname, string(fieldname), BitsUnionLayout(fieldtype), [], IdSet(), false, false, false)
         else
-            StructField(fieldname, string(fieldname), layouts[Any], [], Set(), true, true, false)
+            StructField(fieldname, string(fieldname), layouts[Any], [], IdSet(), true, true, false)
         end
     elseif fieldtype == Union{}
-        StructField(fieldname, string(fieldname), layouts[Union{}], [], Set(), false, false, false)
+        StructField(fieldname, string(fieldname), layouts[Union{}], [], IdSet(), false, false, false)
     elseif fieldtype <: Tuple
         params = extractparams(fieldtype, layouts)
         if length(params) > 0
             error("Tuples with type parameters are not supported")
         elseif isconcretetype(fieldtype)
             layout = concretetuplefield(fieldtype, layouts)
-            StructField(fieldname, string(fieldname), layout, [], Set(), layout.scopelifetime, layout.datalifetime, false)
+            StructField(fieldname, string(fieldname), layout, [], IdSet(), layout.scopelifetime, layout.datalifetime, false)
         else
-            StructField(fieldname, string(fieldname), layouts[Any], [], Set(), true, true, false)
+            StructField(fieldname, string(fieldname), layouts[Any], [], IdSet(), true, true, false)
         end
     elseif fieldtype isa DataType
         bt = basetype(fieldtype)
         if bt in keys(layouts)
             fieldlayout = layouts[bt]
             if fieldlayout isa StructLayout && ismutabletype(fieldtype)
-                StructField(fieldname, string(fieldname), layouts[Any], [], Set(), true, true, false)
+                StructField(fieldname, string(fieldname), layouts[Any], [], IdSet(), true, true, false)
             elseif fieldlayout isa AbstractTypeLayout || fieldlayout isa BuiltinAbstractLayout
-                StructField(fieldname, string(fieldname), layouts[Any], [], Set(), true, true, false)
+                StructField(fieldname, string(fieldname), layouts[Any], [], IdSet(), true, true, false)
             else
                 tparams = map(a -> TypeParameter(a[1].name, a[2]), zip(bt.parameters, fieldtype.parameters))
                 references = extractparams(fieldtype, layouts)
                 StructField(fieldname, string(fieldname), fieldlayout, tparams, references, fieldlayout.scopelifetime, fieldlayout.datalifetime, false)
             end
         elseif ismutabletype(fieldtype)
-            StructField(fieldname, string(fieldname), layouts[Any], [], Set(), true, true, false)
+            StructField(fieldname, string(fieldname), layouts[Any], [], IdSet(), true, true, false)
         elseif Base.uniontype_layout(fieldtype)[1]
-            StructField(fieldname, string(fieldname), layouts[Any], [], Set(), true, true, false)
+            StructField(fieldname, string(fieldname), layouts[Any], [], IdSet(), true, true, false)
         else
-            error("Cannot create field layout")
+            error("Cannot create field layout for $bt")
         end
     else
         error("Unknown field type")
     end
 end
 
-function createlayout!(layouts::Dict{Type,Layout}, @nospecialize(type::Type))::Nothing
-    bt = basetype(type)
+function isenumtype(ty::DataType)
+    ty <: Enum
+end
+
+function createlayout!(layouts::IdDict{DataType,Layout}, @nospecialize(type::Type))::Nothing
+    bt::DataType = basetype(type)
 
     if bt in keys(layouts)
         return
@@ -846,8 +892,18 @@ function createlayout!(layouts::Dict{Type,Layout}, @nospecialize(type::Type))::N
         return
     end
 
+    if isenumtype(bt)
+        repr = bt.super.parameters[1]
+        if !(repr in (Int8, Int16, Int32, Int64, Int, UInt8, UInt16, UInt32, UInt64, UInt))
+            error("Enum type must be one of: Int8, Int16, Int32, Int64, Int, UInt8, UInt16, UInt32, UInt64, UInt. Enum type of $(bt) is $(repr)")
+        end
+        variants = [map(i -> EnumVariant(Symbol(string(i)), string(i), i), instances(bt))...]
+        layouts[bt] = EnumLayout(bt.name.name, bt, string(type.name.name), "", variants)
+        return
+    end
+
     fields = []
-    typevars = Set()
+    typevars = IdSet()
     scopelifetime = false
     datalifetime = false
 
@@ -865,7 +921,7 @@ function createlayout!(layouts::Dict{Type,Layout}, @nospecialize(type::Type))::N
     nothing
 end
 
-function haslifetimes(@nospecialize(ty::Type), layouts::Dict{Type,Layout})::Tuple{Bool,Bool}
+function haslifetimes(@nospecialize(ty::Type), layouts::IdDict{DataType,Layout})::Tuple{Bool,Bool}
     scopelifetime = false
 
     if ty <: Tuple
@@ -909,7 +965,7 @@ function haslifetimes(@nospecialize(ty::Type), layouts::Dict{Type,Layout})::Tupl
     (scopelifetime, false)
 end
 
-function propagate_internal_param_lifetimes!(layouts::Dict{Type,Layout})::Nothing
+function propagate_internal_param_lifetimes!(layouts::IdDict{DataType,Layout})::Nothing
     for (_, layout) in layouts
         if layout isa StructLayout
             scopelifetime = layout.scopelifetime
@@ -963,7 +1019,7 @@ function strgenerics(layout::StructLayout)::Union{Nothing,String}
     end
 end
 
-function strsignature(ty::DataType, layouts::Dict{Type,Layout})::String
+function strsignature(ty::DataType, layouts::IdDict{DataType,Layout})::String
     if ty <: Tuple
         generics = []
 
@@ -1024,7 +1080,7 @@ function strsignature(ty::DataType, layouts::Dict{Type,Layout})::String
     end
 end
 
-function strsignature(layout::StructLayout, field::Union{StructField,TupleField}, layouts::Dict{Type,Layout})::String
+function strsignature(layout::StructLayout, field::Union{StructField,TupleField}, layouts::IdDict{DataType,Layout})::String
     wrap_opt = false
 
     if field isa StructField && field.fieldtype isa StructLayout && ismutabletype(field.fieldtype.type)
@@ -1074,7 +1130,7 @@ function strsignature(layout::StructLayout, field::Union{StructField,TupleField}
     end
 end
 
-function strtuplesignature(layout::StructLayout, field::Union{StructField,TupleField}, layouts::Dict{Type,Layout})::String
+function strtuplesignature(layout::StructLayout, field::Union{StructField,TupleField}, layouts::IdDict{DataType,Layout})::String
     generics = []
 
     for fieldlayout in field.fieldtype.fields
@@ -1097,7 +1153,7 @@ function strstructname(layout::StructLayout)::String
     end
 end
 
-function structfield_parts(layout::StructLayout, field::StructField, layouts::Dict{Type,Layout})::Vector{String}
+function structfield_parts(layout::StructLayout, field::StructField, layouts::IdDict{DataType,Layout})::Vector{String}
     parts = Vector{String}()
     if field.fieldtype isa BitsUnionLayout
         align_field_name = "_$(field.rsname)_align"
@@ -1147,11 +1203,11 @@ function filteredname(mod::Module)::Vector{String}
     parts
 end
 
-strlayout(::BuiltinLayout, ::Dict{Type,Layout})::Union{Nothing,String} = nothing
-strlayout(::UnsupportedLayout, ::Dict{Type,Layout})::Union{Nothing,String} = nothing
-strlayout(::BuiltinAbstractLayout, ::Dict{Type,Layout})::Union{Nothing,String} = nothing
+strlayout(::BuiltinLayout, ::IdDict{DataType,Layout})::Union{Nothing,String} = nothing
+strlayout(::UnsupportedLayout, ::IdDict{DataType,Layout})::Union{Nothing,String} = nothing
+strlayout(::BuiltinAbstractLayout, ::IdDict{DataType,Layout})::Union{Nothing,String} = nothing
 
-function strlayout(layout::AbstractTypeLayout, ::Dict{Type,Layout})::Union{Nothing,String}
+function strlayout(layout::AbstractTypeLayout, ::IdDict{DataType,Layout})::Union{Nothing,String}
     typepath = string(layout.path)
     if length(typepath) == 0
         modulepath = join(filteredname(layout.typename.module), ".")
@@ -1178,7 +1234,7 @@ function strlayout(layout::AbstractTypeLayout, ::Dict{Type,Layout})::Union{Nothi
     join(parts, "\n")
 end
 
-function strlayout(layout::ContainsAtomicFieldsLayout, ::Dict{Type,Layout})::Union{Nothing,String}
+function strlayout(layout::ContainsAtomicFieldsLayout, ::IdDict{DataType,Layout})::Union{Nothing,String}
     typepath = string(layout.path)
     if length(typepath) == 0
         modulepath = join(filteredname(layout.typename.module), ".")
@@ -1205,7 +1261,46 @@ function strlayout(layout::ContainsAtomicFieldsLayout, ::Dict{Type,Layout})::Uni
     join(parts, "\n")
 end
 
-function strlayout(layout::StructLayout, layouts::Dict{Type,Layout})::Union{Nothing,String}
+function strlayout(layout::EnumLayout, layouts::IdDict{DataType,Layout})::Union{Nothing,String}
+    repr = layout.type.super.parameters[1]
+    repr_rsname = layouts[repr].rsname
+
+    typepath = string(layout.path)
+    modulepath = if length(typepath) == 0
+        modulepath = join(filteredname(layout.type.name.module), '.')
+        typepath = "$(modulepath).$(layout.type.name.name)"
+        modulepath
+    else
+        split_name = split(typepath, '.')
+        pop!(split_name)
+        join(split_name, '.')
+    end
+
+    parts = []
+
+    push!(
+        parts,
+        "#[repr($repr_rsname)]",
+        "#[jlrs(julia_type = \"$(typepath)\")]",
+        "#[derive(Copy, Clone, Debug, PartialEq, Enum, Unbox, IntoJulia, ConstructType, IsBits, Typecheck, ValidField, ValidLayout, CCallArg, CCallReturn)]",
+        "enum $(layout.rsname) {"
+    )
+
+    for variant in layout.fields
+        push!(
+            parts,
+            "    #[allow(non_camel_case_types)]",
+            "    #[jlrs(julia_enum_variant = \"$(modulepath).$(variant.name)\")]",
+            "    $(variant.rsname) = $(repr(variant.value)),"
+        )
+    end
+
+    push!(parts, "}")
+
+    join(parts, "\n")
+end
+
+function strlayout(layout::StructLayout, layouts::IdDict{DataType,Layout})::Union{Nothing,String}
     ty = getproperty(layout.typename.module, layout.typename.name)
 
     is_parameter_free = ty isa DataType && isnothing(findfirst(p -> p isa TypeVar, ty.parameters))

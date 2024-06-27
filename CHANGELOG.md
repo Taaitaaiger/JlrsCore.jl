@@ -1,3 +1,7 @@
+#### v0.5.0
+
+- Bindings for enums that have an integer `BaseType` can be generated with `Reflect.reflect`.
+
 #### v0.4.0
 
 - `RustResult` has been removed.

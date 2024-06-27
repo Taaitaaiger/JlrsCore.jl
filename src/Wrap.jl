@@ -143,7 +143,7 @@ function base_type(u::UnionAll)
 end
 
 function type_to_expr(ty::DataType)
-    if length(ty.parameters) > 0 
+    if length(ty.parameters) > 0
         params = map(type_to_expr, ty.parameters)
         Expr(:curly, ty.name.name, params...)
     else
@@ -222,7 +222,7 @@ function build_function_expression(func::JlrsFunctionInfo, funcidx, julia_mod)
     end
 
     decl = :($(make_func_declaration((func.name,func.override_module), argmap(argtypes), julia_mod))::$(jl_return_type))
-    if length(func.environment) > 0 
+    if length(func.environment) > 0
         decl = Expr(:where, decl, map(envmap, func.environment)...)
     end
 
