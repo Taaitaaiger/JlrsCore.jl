@@ -1,5 +1,5 @@
 module Reflect
-using Base.Experimental
+using Base: IdSet, IdDict
 export reflect, renamestruct!, renamefields!, overridepath!
 import Base: show, getindex, write
 
