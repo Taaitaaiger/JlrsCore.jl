@@ -192,7 +192,8 @@ pub struct Complex<T> {
 """
 function reflect(types::Vector{<:Type}; f16::Bool=false, complex::Bool=false)::Layouts
     deps = IdDict{DataType,IdSet{DataType}}()
-    layouts = copy(BUILTINS)
+    layouts = IdDict{DataType,Layout}()
+    insertbuiltins!(layouts)
 
     if f16
         layouts[Float16] = BuiltinLayout("::half::f16", [], false, false, false)
@@ -335,8 +336,8 @@ end
 function StringLayouts(layouts::Layouts)
     strlayouts = IdDict{DataType,String}()
 
-    for name in keys(layouts.dict)
-        rustimpl = strlayout(layouts.dict[name], layouts.dict)
+    for (name, value) in pairs(layouts.dict)
+        rustimpl = strlayout(value, layouts.dict)
         if rustimpl !== nothing
             strlayouts[name] = rustimpl
         end
@@ -466,7 +467,7 @@ function basetype(type::UnionAll)::DataType
     partialtype(definition)
 end
 
-# Populates `BUILTINS`
+# Populates `layouts` with layouts for all builtin types
 function insertbuiltins!(layouts::IdDict{DataType,Layout})::Nothing
     layouts[UInt8] = BuiltinLayout("u8", [], false, false, false)
     layouts[UInt16] = BuiltinLayout("u16", [], false, false, false)
@@ -536,13 +537,6 @@ function insertbuiltins!(layouts::IdDict{DataType,Layout})::Nothing
     layouts[basetype(Base.OrdinalRange)] = BuiltinAbstractLayout()
 
     nothing
-end
-
-# Layouts provided by jlrs
-const BUILTINS = begin
-    d = IdDict{DataType,Layout}()
-    insertbuiltins!(d)
-    d
 end
 
 # Returns `true` if the union type has no unset type parameters.
