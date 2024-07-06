@@ -164,15 +164,16 @@ end
 
 function type_to_expr(u::UnionAll)
     flattened = []
-    base_ty = base_type(u).name.wrapper
-
     while u isa UnionAll
-        if u.var != base_ty.var
-            push!(flattened, type_to_expr(u.var))
-        end
-
         u = u.body
-        base_ty = base_ty.body
+    end
+
+    base_ty = base_type(u.name.wrapper)
+
+    for (v1, v2) in zip(u.parameters, base_ty.parameters)
+        if v1 != v2
+            push!(flattened, type_to_expr(v1))
+        end
     end
 
     Expr(:curly, u.name.name, flattened...)
@@ -221,6 +222,36 @@ function build_function_expression(func::JlrsFunctionInfo, funcidx, julia_mod)
         result
     end
 
+    # A function has an implicit environment if it takes a ranked array with an
+    # indeterminate element type.
+    implicit_env = []
+    for ty in argtypes
+        if ty isa Type && ty <: Array
+            partial_ty = ty
+            while partial_ty isa UnionAll
+                partial_ty = partial_ty.body
+            end
+
+            T = partial_ty.parameters[1]
+            N = partial_ty.parameters[2]
+            if T isa TypeVar && !(N isa TypeVar)
+                push!(implicit_env, T)
+            end
+        end
+    end
+
+    env_size = length(func.environment)
+    if env_size > 0 && length(implicit_env) > 0
+        env_set = Set{Any}(func.environment)
+        implicit_set = Set{Any}(implicit_env)
+
+        if !issubset(implicit_set, env_set)
+            error("functions wth explicit environment cannot have implicit environments")
+        end
+    elseif length(implicit_env) > 0
+        func.environment = Core.svec(implicit_env...)
+    end
+
     decl = :($(make_func_declaration((func.name,func.override_module), argmap(argtypes), julia_mod))::$(jl_return_type))
     if length(func.environment) > 0
         decl = Expr(:where, decl, map(envmap, func.environment)...)
@@ -244,7 +275,9 @@ function wrap_functions(functions, julia_mod)
         push!(julia_mod.__jlrswrap_pointers, fptrs)
         funcidx = length(julia_mod.__jlrswrap_pointers)
 
-        Core.eval(julia_mod, build_function_expression(func, funcidx, julia_mod))
+        ex = build_function_expression(func, funcidx, julia_mod)
+        # println(ex)
+        Core.eval(julia_mod, ex)
     end
 end
 
