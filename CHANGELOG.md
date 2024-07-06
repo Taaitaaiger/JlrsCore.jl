@@ -4,6 +4,8 @@
 
 - Several bugs have been fixed for exported functions with type parameters.
 
+- Performance of `Reflect.reflect` has been improved significantly.
+
 #### v0.4.0
 
 - `RustResult` has been removed.
