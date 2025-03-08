@@ -1,6 +1,6 @@
 module Reflect
 using Base: IdSet, IdDict
-export reflect, renamestruct!, renamefields!, overridepath!
+export reflect, constant_type_var, renamestruct!, renamefields!, overridepath!
 import Base: show, getindex, write
 
 abstract type Layout end
@@ -116,6 +116,7 @@ struct UnsupportedLayout <: Layout
 end
 
 struct Layouts
+    typed_bits_union::Bool
     dict::IdDict{DataType,Layout}
 end
 
@@ -124,14 +125,14 @@ struct StringLayouts
 end
 
 """
-    reflect(types::Vector{<:Type}; f16::Bool=false)::Layouts
+    reflect(types::Vector{<:Type}; f16::Bool=false, complex::Bool=false, typed_bits_union::Bool=false)::Layouts
 
 Generate Rust layouts and type constructors for all types in `types` and their dependencies. The
 only requirement is that these types must not contain any union or tuple fields that directly
 depend on a type parameter.
 
 A layout is a Rust type whose layout exactly matches the layout of the Julia type it's reflected
-from. Layous are generated for the most general case by erasing the content of all provided type
+from. Layouts are generated for the most general case by erasing the content of all provided type
 parameters, so you can't avoid the restrictions regarding union and tuple fields with type
 parameters by explicitly providing a more qualified type. The only effect qualifying types has, is
 that layouts for the used parameters will also be generated. If a type parameter doesn't affect
@@ -190,7 +191,7 @@ pub struct Complex<T> {
 }
 ```
 """
-function reflect(types::Vector{<:Type}; f16::Bool=false, complex::Bool=false)::Layouts
+function reflect(types::Vector{<:Type}; f16::Bool=false, complex::Bool=false, typed_bits_union::Bool=false)::Layouts
     deps = IdDict{DataType,IdSet{DataType}}()
     layouts = IdDict{DataType,Layout}()
     insertbuiltins!(layouts)
@@ -218,7 +219,7 @@ function reflect(types::Vector{<:Type}; f16::Bool=false, complex::Bool=false)::L
     # If any of the fields of a generated layout contain a parameter with lifetimes, these
     # lifetimes must be propagated to the layout's parameters.
     propagate_internal_param_lifetimes!(layouts)
-    Layouts(layouts)
+    Layouts(typed_bits_union, layouts)
 end
 
 """
@@ -337,7 +338,7 @@ function StringLayouts(layouts::Layouts)
     strlayouts = IdDict{DataType,String}()
 
     for (name, value) in pairs(layouts.dict)
-        rustimpl = strlayout(value, layouts.dict)
+        rustimpl = strlayout(value, layouts.dict, layouts.typed_bits_union)
         if rustimpl !== nothing
             strlayouts[name] = rustimpl
         end
@@ -359,7 +360,7 @@ function show(io::IO, layouts::Layouts)
     end
 
     for name in sort(names, lt=(a, b) -> string(a) < string(b))
-        rustimpl = strlayout(layouts.dict[name], layouts.dict)
+        rustimpl = strlayout(layouts.dict[name], layouts.dict, layouts.typed_bits_union)
         if rustimpl !== nothing
             push!(rustimpls, rustimpl)
         end
@@ -377,7 +378,7 @@ function write(io::IO, layouts::Layouts)
     end
 
     for name in sort(names, lt=(a, b) -> string(a) < string(b))
-        rustimpl = strlayout(layouts.dict[name], layouts.dict)
+        rustimpl = strlayout(layouts.dict[name], layouts.dict, layouts.typed_bits_union)
         if rustimpl !== nothing
             push!(rustimpls, rustimpl)
         end
@@ -1147,7 +1148,124 @@ function strstructname(layout::StructLayout)::String
     end
 end
 
-function structfield_parts(layout::StructLayout, field::StructField, layouts::IdDict{DataType,Layout})::Vector{String}
+function flatten_union!(acc::Vector{DataType}, l::Union, r::Union)
+    flatten_union!(acc, l.a, l.b)
+    flatten_union!(acc, r.a, r.b)
+end
+
+function flatten_union!(acc::Vector{DataType}, l::Union, r::DataType)
+    flatten_union!(acc, l.a, l.b)
+    push!(acc, r)
+end
+
+function flatten_union!(acc::Vector{DataType}, l::DataType, r::Union)
+    push!(acc, l)
+    flatten_union!(acc, r.a, r.b)
+end
+
+function flatten_union!(acc::Vector{DataType}, l::DataType, r::DataType)
+    push!(acc, l)
+    push!(acc, r)
+end
+
+function flatten_union(u::Union)
+    flattened = Vector{DataType}()
+    flatten_union!(flattened, u.a, u.b)
+    flattened
+end
+
+"""
+    constant_type_var(t)::String
+
+When the field of a struct is a union of isbits types, its type in Rust can be annotated with its
+variant types. In Julia, instances of isbits types can be used as type variables, but Rust only
+supports a small number of primitive types. In the rare case that you're trying to generate a
+layout for a struct that contains a bits union with such a non-primitive isbits type variable,
+you will need to provide a custom implementation of `ConstructType` in Rust and extend this
+function in Julia to provide a mapping.
+"""
+function constant_type_var(t)
+    throw(ErrorException("custom_constant(t) has not been implemented for $(typeof(t))"))
+end
+
+constant_type_var(value::Int64) = "::jlrs::data::types::construct_type::ConstantI64<$value>"
+constant_type_var(value::Int32) = "::jlrs::data::types::construct_type::ConstantI32<$value>"
+constant_type_var(value::Int16) = "::jlrs::data::types::construct_type::ConstantI16<$value>"
+constant_type_var(value::Int8) = "::jlrs::data::types::construct_type::ConstantI8<$value>"
+constant_type_var(value::UInt64) = "::jlrs::data::types::construct_type::ConstantU64<$value>"
+constant_type_var(value::UInt32) = "::jlrs::data::types::construct_type::ConstantU32<$value>"
+constant_type_var(value::UInt16) = "::jlrs::data::types::construct_type::ConstantU16<$value>"
+constant_type_var(value::UInt8) = "::jlrs::data::types::construct_type::ConstantU8<$value>"
+constant_type_var(value::Bool) = "::jlrs::data::types::construct_type::ConstantBool<$value>"
+
+function qualified_type(value, layouts::IdDict{DataType,Layout})
+    constant_type_var(value)
+end
+
+function qualified_type(ty::Type{T}, layouts::IdDict{DataType,Layout}) where {T <: Tuple}
+    generics = []
+
+    for ty in ty.types
+        push!(generics, qualified_type(ty, layouts))
+    end
+
+    name = "::jlrs::data::layout::tuple::Tuple$(length(generics))"
+
+    if length(generics) > 0
+        return "$(name)<$(join(generics, ", "))>"
+    else
+        return name
+    end
+end
+
+function qualified_type(ty::DataType, layouts::IdDict{DataType,Layout})
+    base = basetype(ty)
+    layout = layouts[base]
+    name = layout.rsname
+
+    generics = []
+    use_ctor = false
+
+    for (tparam, param) in zip(layout.typeparams, ty.parameters)
+        use_ctor |= tparam.elide
+        if param isa TypeVar
+            idx = findfirst(a -> a.name == param.name, layout.typeparams)
+            if idx !== nothing
+                push!(generics, string(param.name))
+            end
+        elseif param isa DataType
+            push!(generics, qualified_type(param, layouts))
+        elseif tparam.elide
+            push!(generics, qualified_type(param, layouts))
+        end
+    end
+
+    if use_ctor
+        if length(generics) > 0
+            "$(name)TypeConstructor<$(join(generics, ", "))>"
+        else
+            "$(name)TypeConstructor"
+        end
+    else
+        if length(generics) > 0
+            "$(name)<$(join(generics, ", "))>"
+        else
+            name
+        end
+    end
+end
+
+function bitsunion_type_constructor(union_of::Union, layouts::IdDict{DataType,Layout})
+    flattened = flatten_union(union_of)
+    field_types = Vector{String}()
+    for ty in flattened
+        push!(field_types, qualified_type(ty, layouts))
+    end
+
+    "::jlrs::UnionOf![$(join(field_types, ", "))]"
+end
+
+function structfield_parts(layout::StructLayout, field::StructField, layouts::IdDict{DataType,Layout}, typed_bits_union::Bool)::Vector{String}
     parts = Vector{String}()
     if field.fieldtype isa BitsUnionLayout
         align_field_name = "_$(field.rsname)_align"
@@ -1173,7 +1291,12 @@ function structfield_parts(layout::StructLayout, field::StructField, layouts::Id
         push!(parts, "#[jlrs(bits_union_align)]")
         push!(parts, "$(align_field_name): $(alignment_ty),")
         push!(parts, "#[jlrs(bits_union)]")
-        push!(parts, "pub $(field.rsname): ::jlrs::data::layout::union::BitsUnion<$(size)>,")
+        if typed_bits_union
+            type_ctor = bitsunion_type_constructor(field.fieldtype.union_of, layouts)
+            push!(parts, "pub $(field.rsname): ::jlrs::data::layout::union::TypedBitsUnion<$type_ctor, $size>,")
+        else
+            push!(parts, "pub $(field.rsname): ::jlrs::data::layout::union::BitsUnion<$size>,")
+        end
         push!(parts, "#[jlrs(bits_union_flag)]")
         push!(parts, "pub $(flag_field_name): u8,")
     else
@@ -1197,11 +1320,11 @@ function filteredname(mod::Module)::Vector{String}
     parts
 end
 
-strlayout(::BuiltinLayout, ::IdDict{DataType,Layout})::Union{Nothing,String} = nothing
-strlayout(::UnsupportedLayout, ::IdDict{DataType,Layout})::Union{Nothing,String} = nothing
-strlayout(::BuiltinAbstractLayout, ::IdDict{DataType,Layout})::Union{Nothing,String} = nothing
+strlayout(::BuiltinLayout, ::IdDict{DataType,Layout}, ::Bool)::Union{Nothing,String} = nothing
+strlayout(::UnsupportedLayout, ::IdDict{DataType,Layout}, ::Bool)::Union{Nothing,String} = nothing
+strlayout(::BuiltinAbstractLayout, ::IdDict{DataType,Layout}, ::Bool)::Union{Nothing,String} = nothing
 
-function strlayout(layout::AbstractTypeLayout, ::IdDict{DataType,Layout})::Union{Nothing,String}
+function strlayout(layout::AbstractTypeLayout, ::IdDict{DataType,Layout}, ::Bool)::Union{Nothing,String}
     typepath = string(layout.path)
     if length(typepath) == 0
         modulepath = join(filteredname(layout.typename.module), ".")
@@ -1228,7 +1351,7 @@ function strlayout(layout::AbstractTypeLayout, ::IdDict{DataType,Layout})::Union
     join(parts, "\n")
 end
 
-function strlayout(layout::ContainsAtomicFieldsLayout, ::IdDict{DataType,Layout})::Union{Nothing,String}
+function strlayout(layout::ContainsAtomicFieldsLayout, ::IdDict{DataType,Layout}, ::Bool)::Union{Nothing,String}
     typepath = string(layout.path)
     if length(typepath) == 0
         modulepath = join(filteredname(layout.typename.module), ".")
@@ -1255,7 +1378,7 @@ function strlayout(layout::ContainsAtomicFieldsLayout, ::IdDict{DataType,Layout}
     join(parts, "\n")
 end
 
-function strlayout(layout::EnumLayout, layouts::IdDict{DataType,Layout})::Union{Nothing,String}
+function strlayout(layout::EnumLayout, layouts::IdDict{DataType,Layout}, ::Bool)::Union{Nothing,String}
     repr = layout.type.super.parameters[1]
     repr_rsname = layouts[repr].rsname
 
@@ -1294,7 +1417,7 @@ function strlayout(layout::EnumLayout, layouts::IdDict{DataType,Layout})::Union{
     join(parts, "\n")
 end
 
-function strlayout(layout::StructLayout, layouts::IdDict{DataType,Layout})::Union{Nothing,String}
+function strlayout(layout::StructLayout, layouts::IdDict{DataType,Layout}, typed_bits_union::Bool)::Union{Nothing,String}
     ty = getproperty(layout.typename.module, layout.typename.name)
 
     is_parameter_free = ty isa DataType && isnothing(findfirst(p -> p isa TypeVar, ty.parameters))
@@ -1334,7 +1457,7 @@ function strlayout(layout::StructLayout, layouts::IdDict{DataType,Layout})::Unio
         "pub struct $(strstructname(layout)) {"
     ]
     for field in layout.fields
-        for part in structfield_parts(layout, field, layouts)
+        for part in structfield_parts(layout, field, layouts, typed_bits_union)
             push!(parts, "    $(part)")
         end
     end

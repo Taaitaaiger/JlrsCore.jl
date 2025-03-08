@@ -1,3 +1,13 @@
+#### v0.6.0
+
+- Support for Julia versions younger than the current LTS (1.10) has been dropped.
+
+- JlrsLedger has been updated to 0.2.0.
+
+- Reflected bits union fields can now be annotated with type information.
+
+- `JLRS_API_VERSION` is now 4.
+
 #### v0.5.0
 
 - Bindings for enums that have an integer `BaseType` can be generated with `Reflect.reflect`.
@@ -19,6 +29,8 @@
 - `Wrap.@wrapmodule` supports generating functions that are generic over one or more parameters, and restricting those parameters.
 
 - `BackgroundTask` and `DelegatedTask` replace the old async callbacks.
+
+- `JLRS_API_VERSION` is now 3.
 
 #### v0.3.0
 

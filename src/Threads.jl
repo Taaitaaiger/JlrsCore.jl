@@ -38,13 +38,6 @@ function interactivecall(func::Function, args...; kwargs...)::Task
     Base.Threads.@spawn :interactive Base.invokelatest(func, args...; kwargs...)
 end
 
-
-scheduleasynclocal(func::Function, wakeptr::Ptr{Cvoid}, args...; kwargs...)::Task = interactivecall(func, wakeptr, args...; kwargs...)
-scheduleasynclocal(func::Function, args...; kwargs...)::Task = interactivecall(func, args...; kwargs...)
-scheduleasync(func::Function, wakeptr::Ptr{Cvoid}, args...; kwargs...)::Task = asynccall(func, wakeptr, args...; kwargs...)
-scheduleasync(func::Function, args...; kwargs...)::Task = asynccall(func, args...; kwargs...)
-
-
 # If all handles are dropped before the main thread starts waiting,
 # notify_main can be called before wait_main is. Because both functions are
 # only called once, we need to check in wait_main whether we've already been
