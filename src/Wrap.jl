@@ -276,7 +276,6 @@ function wrap_functions(functions, julia_mod)
         funcidx = length(julia_mod.__jlrswrap_pointers)
 
         ex = build_function_expression(func, funcidx, julia_mod)
-        # println(ex)
         Core.eval(julia_mod, ex)
     end
 end

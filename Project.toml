@@ -8,8 +8,8 @@ JlrsLedger_jll = "946c7259-7191-581b-9320-f4a77977c88e"
 Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
 
 [compat]
-JlrsLedger_jll = "0.1.0"
-julia = "1.6"
+JlrsLedger_jll = "0.2.0"
+julia = "1.10"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"

@@ -3,6 +3,7 @@ mutable struct BackgroundTask{T}
     thread_handle::Ptr{Cvoid}
     cond::Base.AsyncCondition
     result::T
+    BackgroundTask() = throw(JlrsException("BackgroundTask can only be created from Rust"))
 end
 
 function Base.fetch(@nospecialize t::BackgroundTask{T})::T where {T}

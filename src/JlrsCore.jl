@@ -1,12 +1,19 @@
 module JlrsCore
 
 using Base: @lock
-export BorrowError, JlrsError
+export BorrowError, JlrsError, set_color
 
-const JLRS_API_VERSION = 3
+const JLRS_API_VERSION = 4
 
-# TODO: Thread-safety
-const color = Ref{Bool}(false)
+mutable struct AtomicBool
+     @atomic value::Bool
+end
+
+const ERROR_COLOR = AtomicBool(false)
+
+function set_error_color(color::Bool)
+    @atomic ERROR_COLOR.value = color
+end
 
 const init_lock = ReentrantLock()
 
@@ -20,7 +27,8 @@ end
 # Call showerror and write the output to a string.
 function errorstring(value)::String
     io = IOBuffer()
-    showerror(IOContext(io, :color => color[], :compact => true, :limit => true), value)
+    color = @atomic ERROR_COLOR.value
+    showerror(IOContext(io, :color => color, :compact => true, :limit => true), value)
     String(take!(io))
 end
 
@@ -34,15 +42,6 @@ Exception thrown when a `JlrsError` is returned from an exported Rust function.
 """
 struct JlrsError <: Exception
     msg::String
-end
-
-struct JlrsCatch
-    tag::UInt32
-    error::Ptr{Cvoid}
-end
-
-function call_catch_wrapper(func::Ptr{Cvoid}, callback::Ptr{Cvoid}, trampoline::Ptr{Cvoid}, result::Ptr{Cvoid})::JlrsCatch
-    ccall(func, JlrsCatch, (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}), callback, trampoline, result)
 end
 
 # A Dict containing the root modules of all loaded packages is maintained to be able to
@@ -75,22 +74,15 @@ function unlock_init_lock()
     unlock(init_lock)
 end
 
-
-if VERSION.minor >= 9
-    include("Threads-9-x.jl")
-    include("DelegatedTask.jl")
-else
-    include("Threads-6-8.jl")
-end
-
+include("Threads.jl")
+include("DelegatedTask.jl")
 include("BackgroundTask.jl")
 include("Ledger.jl")
 include("Reflect.jl")
-
 include("Wrap.jl")
 
 function __init__()
-    root_module_c[] =  @cfunction(root_module, Any, (Symbol,))
+    root_module_c[] = @cfunction(root_module, Any, (Symbol,))
 
     @lock package_lock begin
         push!(Base.package_callbacks, add_to_loaded_packages)
