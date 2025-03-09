@@ -38,7 +38,7 @@ function is_borrowed_shared(data)
         return false
     end
 
-    res = ccall(IS_BORROWED_SHARED[], Int32, (Ptr{Cvoid},), data)
+    res = ccall(IS_BORROWED_SHARED[], Int32, (Ptr{Cvoid},), Base.pointer_from_objref(data))
     if res >= 0
         Bool(res)
     else
@@ -56,7 +56,7 @@ function is_borrowed_exclusive(data)
         return false
     end
 
-    res = ccall(IS_BORROWED_EXCLUSIVE[], Int32, (Ptr{Cvoid},), data)
+    res = ccall(IS_BORROWED_EXCLUSIVE[], Int32, (Ptr{Cvoid},), Base.pointer_from_objref(data))
     if res >= 0
         Bool(res)
     else
@@ -76,7 +76,7 @@ function is_borrowed(data)
         return false
     end
 
-    res = ccall(IS_BORROWED[], Int32, (Ptr{Cvoid},), data)
+    res = ccall(IS_BORROWED[], Int32, (Ptr{Cvoid},), Base.pointer_from_objref(data))
     if res >= 0
         Bool(res)
     else
@@ -96,7 +96,7 @@ function try_borrow_shared(data)
         return true
     end
 
-    res = ccall(BORROW_SHARED[], Int32, (Ptr{Cvoid},), data)
+    res = ccall(BORROW_SHARED[], Int32, (Ptr{Cvoid},), Base.pointer_from_objref(data))
     if res >= 0
         Bool(res)
     else
@@ -116,7 +116,7 @@ function try_borrow_exclusive(data)
         return false
     end
 
-    res = ccall(BORROW_EXCLUSIVE[], Int32, (Ptr{Cvoid},), data)
+    res = ccall(BORROW_EXCLUSIVE[], Int32, (Ptr{Cvoid},), Base.pointer_from_objref(data))
     if res >= 0
         Bool(res)
     else
@@ -139,7 +139,7 @@ function unborrow_shared(data)
         return true
     end
 
-    res = ccall(UNBORROW_SHARED[], Int32, (Ptr{Cvoid},), data)
+    res = ccall(UNBORROW_SHARED[], Int32, (Ptr{Cvoid},), Base.pointer_from_objref(data))
     if res >= 0
         Bool(res)
     else
@@ -161,7 +161,7 @@ function unborrow_exclusive(data)
         return true
     end
 
-    res = ccall(UNBORROW_EXCLUSIVE[], Int32, (Ptr{Cvoid},), data)
+    res = ccall(UNBORROW_EXCLUSIVE[], Int32, (Ptr{Cvoid},), Base.pointer_from_objref(data))
     if res >= 0
         Bool(res)
     else
