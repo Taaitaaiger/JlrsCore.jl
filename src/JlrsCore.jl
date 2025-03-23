@@ -56,6 +56,7 @@ function root_module(package_name)
 end
 
 const root_module_c = Ref{Ptr{Cvoid}}()
+const getproperty_c = Ref{Ptr{Cvoid}}()
 
 # Adds the root module of this package to loaded_packages. This function is called automatically
 # when a package is loaded.
@@ -74,6 +75,11 @@ function unlock_init_lock()
     unlock(init_lock)
 end
 
+# Alternative to jl_get_global
+function Base_getproperty(a::Module, b::Symbol)
+    getproperty(a, b)
+end
+
 include("Threads.jl")
 include("DelegatedTask.jl")
 include("BackgroundTask.jl")
@@ -83,6 +89,7 @@ include("Wrap.jl")
 
 function __init__()
     root_module_c[] = @cfunction(root_module, Any, (Symbol,))
+    getproperty_c[] = @cfunction(Base_getproperty, Any, (Module, Symbol))
 
     @lock package_lock begin
         push!(Base.package_callbacks, add_to_loaded_packages)

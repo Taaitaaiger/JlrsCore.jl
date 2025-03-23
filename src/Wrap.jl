@@ -262,18 +262,20 @@ end
 
 # Wrap functions from the JlrsCore module to the passed julia module
 function wrap_functions(functions, julia_mod)
-    if !isempty(julia_mod.__jlrswrap_pointers)
-        empty!(julia_mod.__jlrswrap_methodkeys)
-        empty!(julia_mod.__jlrswrap_pointers)
+    jlrsp = Base.invokelatest(getproperty, julia_mod, :__jlrswrap_pointers)
+    jlrsmk = Base.invokelatest(getproperty, julia_mod, :__jlrswrap_methodkeys)
+    if !isempty(jlrsp)
+        empty!(jlrsmk)
+        empty!(jlrsp)
     end
 
     precompiling = true
 
     for func in functions
         (mkey,fptrs) = _register_function_pointers(func, precompiling)
-        push!(julia_mod.__jlrswrap_methodkeys, mkey)
-        push!(julia_mod.__jlrswrap_pointers, fptrs)
-        funcidx = length(julia_mod.__jlrswrap_pointers)
+        push!(jlrsmk, mkey)
+        push!(jlrsp, fptrs)
+        funcidx = length(jlrsp)
 
         ex = build_function_expression(func, funcidx, julia_mod)
         Core.eval(julia_mod, ex)
