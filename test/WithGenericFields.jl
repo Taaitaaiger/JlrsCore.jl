@@ -97,7 +97,7 @@ end
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
         #[jlrs(julia_type = "Main.WithGenericUnionAll")]
         pub struct WithGenericUnionAll<'scope, 'data> {
-            pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'scope, 'data>>,
+            pub a: ::std::option::Option<::jlrs::data::managed::value::WeakValue<'scope, 'data>>,
         }"""
     end
 
@@ -125,7 +125,7 @@ end
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
         #[jlrs(julia_type = "Main.WithPropagatedLifetime")]
         pub struct WithPropagatedLifetime<'scope> {
-            pub a: WithGenericT<::std::option::Option<::jlrs::data::managed::module::ModuleRef<'scope>>>,
+            pub a: WithGenericT<::std::option::Option<::jlrs::data::managed::module::WeakModule<'scope>>>,
         }"""
     end
 
@@ -137,7 +137,7 @@ end
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
         #[jlrs(julia_type = "Main.WithPropagatedLifetimes")]
         pub struct WithPropagatedLifetimes<'scope, 'data> {
-            pub a: WithGenericT<::jlrs::data::layout::tuple::Tuple2<i32, WithGenericT<::std::option::Option<::jlrs::data::managed::array::ArrayRef<'scope, 'data>>>>>,
+            pub a: WithGenericT<::jlrs::data::layout::tuple::Tuple2<i32, WithGenericT<::std::option::Option<::jlrs::data::managed::array::WeakArray<'scope, 'data>>>>>,
         }"""
     end
 end

@@ -51,7 +51,7 @@ end
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ConstructType)]
         #[jlrs(julia_type = "Main.MutNested")]
         pub struct MutNested<'scope, 'data> {
-            pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'scope, 'data>>,
+            pub a: ::std::option::Option<::jlrs::data::managed::value::WeakValue<'scope, 'data>>,
         }"""
     end
 
@@ -68,7 +68,7 @@ end
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
         #[jlrs(julia_type = "Main.Immut")]
         pub struct Immut<'scope, 'data> {
-            pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'scope, 'data>>,
+            pub a: ::std::option::Option<::jlrs::data::managed::value::WeakValue<'scope, 'data>>,
         }"""
     end
 
@@ -116,7 +116,7 @@ end
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField)]
         #[jlrs(julia_type = "Main.HasGenericImmut")]
         pub struct HasGenericImmut<'scope, 'data> {
-            pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'scope, 'data>>,
+            pub a: ::std::option::Option<::jlrs::data::managed::value::WeakValue<'scope, 'data>>,
         }
 
         #[derive(ConstructType, HasLayout)]
@@ -134,7 +134,7 @@ end
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck)]
         #[jlrs(julia_type = "Main.DoubleHasGeneric")]
         pub struct DoubleHasGeneric<'scope, 'data> {
-            pub a: ::std::option::Option<::jlrs::data::managed::value::ValueRef<'scope, 'data>>,
+            pub a: ::std::option::Option<::jlrs::data::managed::value::WeakValue<'scope, 'data>>,
         }
 
         #[derive(ConstructType, HasLayout)]
