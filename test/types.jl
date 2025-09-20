@@ -179,10 +179,6 @@ struct WithSymbol
     a::Symbol
 end
 
-struct WithTask
-    a::Task
-end
-
 struct WithTypeName
     a::Core.TypeName
 end
@@ -332,7 +328,6 @@ reflect([
     WithSimpleVector,
     WithString,
     WithSymbol,
-    WithTask,
     WithTypeMapEntry,
     WithTypeMapLevel,
     WithTypeName,

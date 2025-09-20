@@ -485,19 +485,18 @@ function insertbuiltins!(layouts::IdDict{DataType,Layout})::Nothing
     layouts[Char] = BuiltinLayout("::jlrs::data::layout::char::Char", [], false, false, false)
     layouts[typeof(Union{})] = BuiltinLayout("::jlrs::data::layout::union::EmptyUnion", [], false, false, false)
 
-    layouts[Any] = BuiltinLayout("::jlrs::data::managed::value::ValueRef", [], true, true, true)
-    layouts[basetype(Array)] = BuiltinLayout("::jlrs::data::managed::array::ArrayRef", [StructParameter(:T, true), StructParameter(:N, true)], true, true, true)
-    layouts[DataType] = BuiltinLayout("::jlrs::data::managed::datatype::DataTypeRef", [], true, false, true)
-    layouts[Module] = BuiltinLayout("::jlrs::data::managed::module::ModuleRef", [], true, false, true)
-    layouts[Core.SimpleVector] = BuiltinLayout("::jlrs::data::managed::simple_vector::SimpleVectorRef", [], true, false, true)
-    layouts[String] = BuiltinLayout("::jlrs::data::managed::string::StringRef", [], true, false, true)
-    layouts[Symbol] = BuiltinLayout("::jlrs::data::managed::symbol::SymbolRef", [], true, false, true)
-    layouts[Task] = BuiltinLayout("::jlrs::data::managed::task::TaskRef", [], true, false, true)
-    layouts[Core.TypeName] = BuiltinLayout("::jlrs::data::managed::type_name::TypeNameRef", [], true, false, true)
-    layouts[TypeVar] = BuiltinLayout("::jlrs::data::managed::type_var::TypeVarRef", [], true, false, true)
-    layouts[Union] = BuiltinLayout("::jlrs::data::managed::union::UnionRef", [], true, false, true)
-    layouts[UnionAll] = BuiltinLayout("::jlrs::data::managed::union_all::UnionAllRef", [], true, false, true)
-    layouts[Expr] = BuiltinLayout("::jlrs::data::managed::expr::ExprRef", [], true, false, true)
+    layouts[Any] = BuiltinLayout("::jlrs::data::managed::value::WeakValue", [], true, true, true)
+    layouts[basetype(Array)] = BuiltinLayout("::jlrs::data::managed::array::WeakArray", [StructParameter(:T, true), StructParameter(:N, true)], true, true, true)
+    layouts[DataType] = BuiltinLayout("::jlrs::data::managed::datatype::WeakDataType", [], true, false, true)
+    layouts[Module] = BuiltinLayout("::jlrs::data::managed::module::WeakModule", [], true, false, true)
+    layouts[Core.SimpleVector] = BuiltinLayout("::jlrs::data::managed::simple_vector::WeakSimpleVector", [], true, false, true)
+    layouts[String] = BuiltinLayout("::jlrs::data::managed::string::WeakString", [], true, false, true)
+    layouts[Symbol] = BuiltinLayout("::jlrs::data::managed::symbol::WeakSymbol", [], true, false, true)
+    layouts[Core.TypeName] = BuiltinLayout("::jlrs::data::managed::type_name::WeakTypeName", [], true, false, true)
+    layouts[TypeVar] = BuiltinLayout("::jlrs::data::managed::type_var::WeakTypeVar", [], true, false, true)
+    layouts[Union] = BuiltinLayout("::jlrs::data::managed::union::WeakUnion", [], true, false, true)
+    layouts[UnionAll] = BuiltinLayout("::jlrs::data::managed::union_all::WeakUnionAll", [], true, false, true)
+    layouts[Expr] = BuiltinLayout("::jlrs::data::managed::expr::WeakExpr", [], true, false, true)
 
     layouts[Core.AbstractChar] = BuiltinAbstractLayout()
     layouts[Core.AbstractFloat] = BuiltinAbstractLayout()
@@ -1079,7 +1078,7 @@ function strsignature(layout::StructLayout, field::Union{StructField,TupleField}
     wrap_opt = false
 
     if field isa StructField && field.fieldtype isa StructLayout && ismutabletype(field.fieldtype.type)
-        return "::std::option::Option<::jlrs::data::managed::value::ValueRef<'scope, 'data>>"
+        return "::std::option::Option<::jlrs::data::managed::value::WeakValue<'scope, 'data>>"
     end
 
     if field.fieldtype isa GenericLayout
