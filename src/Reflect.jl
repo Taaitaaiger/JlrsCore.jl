@@ -492,7 +492,6 @@ function insertbuiltins!(layouts::IdDict{DataType,Layout})::Nothing
     layouts[Core.SimpleVector] = BuiltinLayout("::jlrs::data::managed::simple_vector::WeakSimpleVector", [], true, false, true)
     layouts[String] = BuiltinLayout("::jlrs::data::managed::string::WeakString", [], true, false, true)
     layouts[Symbol] = BuiltinLayout("::jlrs::data::managed::symbol::WeakSymbol", [], true, false, true)
-    layouts[Task] = BuiltinLayout("::jlrs::data::managed::task::WeakTask", [], true, false, true)
     layouts[Core.TypeName] = BuiltinLayout("::jlrs::data::managed::type_name::WeakTypeName", [], true, false, true)
     layouts[TypeVar] = BuiltinLayout("::jlrs::data::managed::type_var::WeakTypeVar", [], true, false, true)
     layouts[Union] = BuiltinLayout("::jlrs::data::managed::union::WeakUnion", [], true, false, true)

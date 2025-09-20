@@ -42,10 +42,6 @@ struct WithSymbol
     a::Symbol
 end
 
-struct WithTask
-    a::Task
-end
-
 struct WithTypeName
     a::Core.TypeName
 end
@@ -200,18 +196,6 @@ end
         #[jlrs(julia_type = "Main.WithSymbol")]
         pub struct WithSymbol<'scope> {
             pub a: ::std::option::Option<::jlrs::data::managed::symbol::WeakSymbol<'scope>>,
-        }"""
-    end
-
-    @test begin
-        b = Reflect.reflect([WithTask])
-        sb = Reflect.StringLayouts(b)
-
-        sb[WithTask] === """#[repr(C)]
-        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
-        #[jlrs(julia_type = "Main.WithTask")]
-        pub struct WithTask<'scope> {
-            pub a: ::std::option::Option<::jlrs::data::managed::task::WeakTask<'scope>>,
         }"""
     end
 
