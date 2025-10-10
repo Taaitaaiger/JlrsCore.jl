@@ -11,6 +11,8 @@ end
 
 const ERROR_COLOR = AtomicBool(false)
 
+const STACKS = Dict{Symbol,DataType}()
+
 function set_error_color(color::Bool)
     @atomic ERROR_COLOR.value = color
 end
