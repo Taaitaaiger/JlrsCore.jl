@@ -1,3 +1,7 @@
+#### v0.6.1
+
+- Add STACKS container to avoid creating new types in this module from jlrs.
+
 #### v0.6.0
 
 - Support for Julia versions younger than the current LTS (1.10) has been dropped.
