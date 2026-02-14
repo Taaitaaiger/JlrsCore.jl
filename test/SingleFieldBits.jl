@@ -54,6 +54,14 @@ struct BitsTypeFloat64
     a::Float64
 end
 
+struct BitsTypeU128
+    a::UInt128
+end
+
+struct BitsTypeI128
+    a::Int128
+end
+
 @testset "Single-field bits types" begin
     @test begin
         b = Reflect.reflect([BitsTypeBool])
@@ -220,6 +228,30 @@ end
         #[jlrs(julia_type = "Main.BitsTypeFloat64")]
         pub struct BitsTypeFloat64 {
             pub a: f64,
+        }"""
+    end
+
+    @test begin
+        b = Reflect.reflect([BitsTypeU128])
+        sb = Reflect.StringLayouts(b)
+
+        sb[BitsTypeU128] === """#[repr(C)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, IsBits, ConstructType, CCallArg, CCallReturn)]
+        #[jlrs(julia_type = "Main.BitsTypeU128")]
+        pub struct BitsTypeU128 {
+            pub a: u128,
+        }"""
+    end
+
+    @test begin
+        b = Reflect.reflect([BitsTypeI128])
+        sb = Reflect.StringLayouts(b)
+
+        sb[BitsTypeI128] === """#[repr(C)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, IsBits, ConstructType, CCallArg, CCallReturn)]
+        #[jlrs(julia_type = "Main.BitsTypeI128")]
+        pub struct BitsTypeI128 {
+            pub a: i128,
         }"""
     end
 end
