@@ -1,3 +1,7 @@
+#### V0.7.0
+
+- Support reflecting 128-bit integer types.
+
 #### v0.6.1
 
 - Add STACKS container to avoid creating new types in this module from jlrs.

@@ -474,10 +474,12 @@ function insertbuiltins!(layouts::IdDict{DataType,Layout})::Nothing
     layouts[UInt16] = BuiltinLayout("u16", [], false, false, false)
     layouts[UInt32] = BuiltinLayout("u32", [], false, false, false)
     layouts[UInt64] = BuiltinLayout("u64", [], false, false, false)
+    layouts[UInt128] = BuiltinLayout("u128", [], false, false, false)
     layouts[Int8] = BuiltinLayout("i8", [], false, false, false)
     layouts[Int16] = BuiltinLayout("i16", [], false, false, false)
     layouts[Int32] = BuiltinLayout("i32", [], false, false, false)
     layouts[Int64] = BuiltinLayout("i64", [], false, false, false)
+    layouts[Int128] = BuiltinLayout("i128", [], false, false, false)
 
     layouts[Float32] = BuiltinLayout("f32", [], false, false, false)
     layouts[Float64] = BuiltinLayout("f64", [], false, false, false)
