@@ -1,8 +1,16 @@
-#### v0.6.1
+# Changelog
+
+## v0.7.0
+
+- Support exporting public items from wrapped modules.
+
+- `JLRS_API_VERSION` is now 5.
+
+## v0.6.1
 
 - Add STACKS container to avoid creating new types in this module from jlrs.
 
-#### v0.6.0
+## v0.6.0
 
 - Support for Julia versions younger than the current LTS (1.10) has been dropped.
 
@@ -12,7 +20,7 @@
 
 - `JLRS_API_VERSION` is now 4.
 
-#### v0.5.0
+## v0.5.0
 
 - Bindings for enums that have an integer `BaseType` can be generated with `Reflect.reflect`.
 
@@ -20,7 +28,7 @@
 
 - Performance of `Reflect.reflect` has been improved significantly.
 
-#### v0.4.0
+## v0.4.0
 
 - `RustResult` has been removed.
 
@@ -36,7 +44,7 @@
 
 - `JLRS_API_VERSION` is now 3.
 
-#### v0.3.0
+## v0.3.0
 
 - The `IsBits` trait is derived for layout types by `Reflect.reflect` if the type it reflects is an `isbits` type when all type parameters that affect the layout are `isbits` types.
 
@@ -48,8 +56,7 @@
 
 - `JLRS_API_VERSION` is now 2.
 
-
-#### v0.2.0
+## v0.2.0
 
 - Upgrade JlrsLedger to v0.1.0
 

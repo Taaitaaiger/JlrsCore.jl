@@ -261,6 +261,11 @@ function build_function_expression(func::JlrsFunctionInfo, funcidx, julia_mod)
     return :($decl = @inbounds ccall(__jlrswrap_pointers[$funcidx][1], $c_return_type, ($(c_arg_types...),), $(argsymbols...)))
 end
 
+function wrap_exports(exports, julia_mod)
+    ex = Expr(:export, exports...)
+    Core.eval(julia_mod, ex)
+end
+
 # Wrap functions from the JlrsCore module to the passed julia module
 function wrap_functions(functions, julia_mod)
     jlrsp = Base.invokelatest(getproperty, julia_mod, :__jlrswrap_pointers)
@@ -317,6 +322,7 @@ function wrapmodule(so_path::AbstractString, init_fn_name, m::Module, filename, 
         return
     end
 
+    wrap_exports(modinfo.exports, m)
     wrap_functions(modinfo.func_info, m)
     generate_docs(filename, modinfo.docs)
 end
