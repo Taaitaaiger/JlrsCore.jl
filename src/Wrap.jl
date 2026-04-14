@@ -31,6 +31,7 @@ end
 struct JlrsModuleInfo
     func_info::Vector{JlrsFunctionInfo}
     docs::Vector{DocItem}
+    exports::Vector{Symbol}
 end
 
 # Type of the key used in the global function list, used to uniquely identify methods
@@ -39,7 +40,7 @@ const MethodKey = Tuple{Symbol,Symbol,UInt}
 function _module_name_hash(mod::Module, previous_hash=UInt(0))
     parent = parentmodule(mod)
     if parent == mod || parent == Main
-      return hash(nameof(mod), previous_hash)
+        return hash(nameof(mod), previous_hash)
     end
     return _module_name_hash(parent, hash(nameof(mod), previous_hash))
 end
@@ -48,7 +49,7 @@ end
 function methodkey(f::JlrsFunctionInfo)
     mhash = UInt(0)
     for arg in f.julia_argument_types
-      mhash = hash(arg, mhash)
+        mhash = hash(arg, mhash)
     end
     mhash = hash(f.julia_return_type, mhash)
     mhash = hash(_module_name_hash(f.override_module), mhash)
