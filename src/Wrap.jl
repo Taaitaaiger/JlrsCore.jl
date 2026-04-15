@@ -31,7 +31,7 @@ end
 struct JlrsModuleInfo
     func_info::Vector{JlrsFunctionInfo}
     docs::Vector{DocItem}
-    exports::Vector{Symbol}
+    exports::Vector{Any}
 end
 
 # Type of the key used in the global function list, used to uniquely identify methods
