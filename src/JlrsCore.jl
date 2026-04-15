@@ -3,7 +3,7 @@ module JlrsCore
 using Base: @lock
 export BorrowError, JlrsError, set_color
 
-const JLRS_API_VERSION = 4
+const JLRS_API_VERSION = 5
 
 mutable struct AtomicBool
      @atomic value::Bool

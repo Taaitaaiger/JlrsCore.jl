@@ -31,6 +31,7 @@ end
 struct JlrsModuleInfo
     func_info::Vector{JlrsFunctionInfo}
     docs::Vector{DocItem}
+    exports::Vector{Any}
 end
 
 # Type of the key used in the global function list, used to uniquely identify methods
@@ -39,7 +40,7 @@ const MethodKey = Tuple{Symbol,Symbol,UInt}
 function _module_name_hash(mod::Module, previous_hash=UInt(0))
     parent = parentmodule(mod)
     if parent == mod || parent == Main
-      return hash(nameof(mod), previous_hash)
+        return hash(nameof(mod), previous_hash)
     end
     return _module_name_hash(parent, hash(nameof(mod), previous_hash))
 end
@@ -48,7 +49,7 @@ end
 function methodkey(f::JlrsFunctionInfo)
     mhash = UInt(0)
     for arg in f.julia_argument_types
-      mhash = hash(arg, mhash)
+        mhash = hash(arg, mhash)
     end
     mhash = hash(f.julia_return_type, mhash)
     mhash = hash(_module_name_hash(f.override_module), mhash)
@@ -260,6 +261,11 @@ function build_function_expression(func::JlrsFunctionInfo, funcidx, julia_mod)
     return :($decl = @inbounds ccall(__jlrswrap_pointers[$funcidx][1], $c_return_type, ($(c_arg_types...),), $(argsymbols...)))
 end
 
+function wrap_exports(exports, julia_mod)
+    ex = Expr(:export, exports...)
+    Core.eval(julia_mod, ex)
+end
+
 # Wrap functions from the JlrsCore module to the passed julia module
 function wrap_functions(functions, julia_mod)
     jlrsp = Base.invokelatest(getproperty, julia_mod, :__jlrswrap_pointers)
@@ -316,6 +322,7 @@ function wrapmodule(so_path::AbstractString, init_fn_name, m::Module, filename, 
         return
     end
 
+    wrap_exports(modinfo.exports, m)
     wrap_functions(modinfo.func_info, m)
     generate_docs(filename, modinfo.docs)
 end
