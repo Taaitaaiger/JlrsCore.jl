@@ -175,8 +175,8 @@ when the jlrs prelude is imported.
 
 When you use these layouts with jlrs, the types they've been generated from must be available with
 the same path at generation time and run time. For example, if you generate a layout for
-`Main.Bar.Baz`, this type must be available through that path and not some other path like
-`Main.Foo.Bar.Baz`. The path can be overriden by calling `overridepath!`.
+`Bar.Baz`, this type must be available through that path and not some other path like
+`Foo.Bar.Baz`. The path can be overriden by calling `overridepath!`.
 
 # Example
 ```jldoctest
@@ -242,7 +242,7 @@ julia> renamestruct!(layouts, Foo, "Bar")
 julia> layouts
 #[repr(C)]
 #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, IsBits, ConstructType)]
-#[jlrs(julia_type = "Main.Foo", zero_sized_type)]
+#[jlrs(julia_type = "Foo", zero_sized_type)]
 pub struct Bar {
 }
 ```
@@ -274,7 +274,7 @@ julia> renamefields!(layouts, Food, [:burger => "hamburger"])
 julia> layouts
 #[repr(C)]
 #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, IsBits, ConstructType, CCallArg, CCallReturn)]
-#[jlrs(julia_type = "Main.Food")]
+#[jlrs(julia_type = "Food")]
 pub struct Food {
     pub hamburger: ::jlrs::data::layout::bool::Bool,
 }
