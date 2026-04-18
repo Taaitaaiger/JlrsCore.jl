@@ -16,7 +16,7 @@ end
 
         sb[BitsIntBool] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, IsBits, ConstructType, CCallArg, CCallReturn)]
-        #[jlrs(julia_type = "Main.BitsIntBool")]
+        #[jlrs(julia_type = "BitsIntBool")]
         pub struct BitsIntBool {
             pub a: i64,
             pub b: ::jlrs::data::layout::bool::Bool,
@@ -29,7 +29,7 @@ end
 
         sb[BitsCharFloat32Float64] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, IsBits, ConstructType, CCallArg, CCallReturn)]
-        #[jlrs(julia_type = "Main.BitsCharFloat32Float64")]
+        #[jlrs(julia_type = "BitsCharFloat32Float64")]
         pub struct BitsCharFloat32Float64 {
             pub a: ::jlrs::data::layout::char::Char,
             pub b: f32,

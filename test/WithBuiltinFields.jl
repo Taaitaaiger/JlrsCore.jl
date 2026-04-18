@@ -73,7 +73,7 @@ end
 
         sb[WithArray] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
-        #[jlrs(julia_type = "Main.WithArray")]
+        #[jlrs(julia_type = "WithArray")]
         pub struct WithArray<'scope, 'data> {
             pub a: ::std::option::Option<::jlrs::data::managed::array::WeakArray<'scope, 'data>>,
         }"""
@@ -85,7 +85,7 @@ end
 
         sb[WithCodeInstance] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
-        #[jlrs(julia_type = "Main.WithCodeInstance")]
+        #[jlrs(julia_type = "WithCodeInstance")]
         pub struct WithCodeInstance<'scope, 'data> {
             pub a: ::std::option::Option<::jlrs::data::managed::value::WeakValue<'scope, 'data>>,
         }"""
@@ -97,7 +97,7 @@ end
 
         sb[WithDataType] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
-        #[jlrs(julia_type = "Main.WithDataType")]
+        #[jlrs(julia_type = "WithDataType")]
         pub struct WithDataType<'scope> {
             pub a: ::std::option::Option<::jlrs::data::managed::datatype::WeakDataType<'scope>>,
         }"""
@@ -109,7 +109,7 @@ end
 
         sb[WithExpr] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
-        #[jlrs(julia_type = "Main.WithExpr")]
+        #[jlrs(julia_type = "WithExpr")]
         pub struct WithExpr<'scope> {
             pub a: ::std::option::Option<::jlrs::data::managed::expr::WeakExpr<'scope>>,
         }"""
@@ -121,7 +121,7 @@ end
 
         sb[WithString] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
-        #[jlrs(julia_type = "Main.WithString")]
+        #[jlrs(julia_type = "WithString")]
         pub struct WithString<'scope> {
             pub a: ::std::option::Option<::jlrs::data::managed::string::WeakString<'scope>>,
         }"""
@@ -133,7 +133,7 @@ end
 
         sb[WithMethod] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
-        #[jlrs(julia_type = "Main.WithMethod")]
+        #[jlrs(julia_type = "WithMethod")]
         pub struct WithMethod<'scope, 'data> {
             pub a: ::std::option::Option<::jlrs::data::managed::value::WeakValue<'scope, 'data>>,
         }"""
@@ -145,7 +145,7 @@ end
 
         sb[WithMethodInstance] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
-        #[jlrs(julia_type = "Main.WithMethodInstance")]
+        #[jlrs(julia_type = "WithMethodInstance")]
         pub struct WithMethodInstance<'scope, 'data> {
             pub a: ::std::option::Option<::jlrs::data::managed::value::WeakValue<'scope, 'data>>,
         }"""
@@ -157,7 +157,7 @@ end
 
         sb[WithMethodTable] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
-        #[jlrs(julia_type = "Main.WithMethodTable")]
+        #[jlrs(julia_type = "WithMethodTable")]
         pub struct WithMethodTable<'scope, 'data> {
             pub a: ::std::option::Option<::jlrs::data::managed::value::WeakValue<'scope, 'data>>,
         }"""
@@ -169,7 +169,7 @@ end
 
         sb[WithModule] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
-        #[jlrs(julia_type = "Main.WithModule")]
+        #[jlrs(julia_type = "WithModule")]
         pub struct WithModule<'scope> {
             pub a: ::std::option::Option<::jlrs::data::managed::module::WeakModule<'scope>>,
         }"""
@@ -181,7 +181,7 @@ end
 
         sb[WithSimpleVector] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
-        #[jlrs(julia_type = "Main.WithSimpleVector")]
+        #[jlrs(julia_type = "WithSimpleVector")]
         pub struct WithSimpleVector<'scope> {
             pub a: ::std::option::Option<::jlrs::data::managed::simple_vector::WeakSimpleVector<'scope>>,
         }"""
@@ -193,7 +193,7 @@ end
 
         sb[WithSymbol] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
-        #[jlrs(julia_type = "Main.WithSymbol")]
+        #[jlrs(julia_type = "WithSymbol")]
         pub struct WithSymbol<'scope> {
             pub a: ::std::option::Option<::jlrs::data::managed::symbol::WeakSymbol<'scope>>,
         }"""
@@ -205,7 +205,7 @@ end
 
         sb[WithTypeMapEntry] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
-        #[jlrs(julia_type = "Main.WithTypeMapEntry")]
+        #[jlrs(julia_type = "WithTypeMapEntry")]
         pub struct WithTypeMapEntry<'scope, 'data> {
             pub a: ::std::option::Option<::jlrs::data::managed::value::WeakValue<'scope, 'data>>,
         }"""
@@ -217,7 +217,7 @@ end
 
         sb[WithTypeMapLevel] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
-        #[jlrs(julia_type = "Main.WithTypeMapLevel")]
+        #[jlrs(julia_type = "WithTypeMapLevel")]
         pub struct WithTypeMapLevel<'scope, 'data> {
             pub a: ::std::option::Option<::jlrs::data::managed::value::WeakValue<'scope, 'data>>,
         }"""
@@ -229,7 +229,7 @@ end
 
         sb[WithTypeName] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
-        #[jlrs(julia_type = "Main.WithTypeName")]
+        #[jlrs(julia_type = "WithTypeName")]
         pub struct WithTypeName<'scope> {
             pub a: ::std::option::Option<::jlrs::data::managed::type_name::WeakTypeName<'scope>>,
         }"""
@@ -241,7 +241,7 @@ end
 
         sb[WithTypeVar] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
-        #[jlrs(julia_type = "Main.WithTypeVar")]
+        #[jlrs(julia_type = "WithTypeVar")]
         pub struct WithTypeVar<'scope> {
             pub a: ::std::option::Option<::jlrs::data::managed::type_var::WeakTypeVar<'scope>>,
         }"""
@@ -253,7 +253,7 @@ end
 
         sb[WithUnion] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
-        #[jlrs(julia_type = "Main.WithUnion")]
+        #[jlrs(julia_type = "WithUnion")]
         pub struct WithUnion<'scope> {
             pub a: ::std::option::Option<::jlrs::data::managed::union::WeakUnion<'scope>>,
         }"""
@@ -265,7 +265,7 @@ end
 
         sb[WithUnionAll] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
-        #[jlrs(julia_type = "Main.WithUnionAll")]
+        #[jlrs(julia_type = "WithUnionAll")]
         pub struct WithUnionAll<'scope> {
             pub a: ::std::option::Option<::jlrs::data::managed::union_all::WeakUnionAll<'scope>>,
         }"""
@@ -277,7 +277,7 @@ end
 
         sb[WithCodeInstance] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
-        #[jlrs(julia_type = "Main.WithCodeInstance")]
+        #[jlrs(julia_type = "WithCodeInstance")]
         pub struct WithCodeInstance<'scope, 'data> {
             pub a: ::std::option::Option<::jlrs::data::managed::value::WeakValue<'scope, 'data>>,
         }"""
@@ -289,7 +289,7 @@ end
 
         sb[WithArray] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
-        #[jlrs(julia_type = "Main.WithArray")]
+        #[jlrs(julia_type = "WithArray")]
         pub struct WithArray<'scope, 'data> {
             pub a: ::std::option::Option<::jlrs::data::managed::array::WeakArray<'scope, 'data>>,
         }"""
@@ -303,7 +303,7 @@ end
 
         sb[WithDataType] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
-        #[jlrs(julia_type = "Main.WithDataType")]
+        #[jlrs(julia_type = "WithDataType")]
         pub struct WithDataType<'scope> {
             pub a: ::std::option::Option<::jlrs::data::managed::datatype::WeakDataType<'scope>>,
         }"""
@@ -315,7 +315,7 @@ end
 
         sb[WithExpr] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
-        #[jlrs(julia_type = "Main.WithExpr")]
+        #[jlrs(julia_type = "WithExpr")]
         pub struct WithExpr<'scope> {
             pub a: ::std::option::Option<::jlrs::data::managed::expr::WeakExpr<'scope>>,
         }"""
@@ -327,7 +327,7 @@ end
 
         sb[WithMethod] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
-        #[jlrs(julia_type = "Main.WithMethod")]
+        #[jlrs(julia_type = "WithMethod")]
         pub struct WithMethod<'scope, 'data> {
             pub a: ::std::option::Option<::jlrs::data::managed::value::WeakValue<'scope, 'data>>,
         }"""
@@ -339,7 +339,7 @@ end
 
         sb[WithMethodInstance] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
-        #[jlrs(julia_type = "Main.WithMethodInstance")]
+        #[jlrs(julia_type = "WithMethodInstance")]
         pub struct WithMethodInstance<'scope, 'data> {
             pub a: ::std::option::Option<::jlrs::data::managed::value::WeakValue<'scope, 'data>>,
         }"""
@@ -351,7 +351,7 @@ end
 
         sb[WithMethodTable] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
-        #[jlrs(julia_type = "Main.WithMethodTable")]
+        #[jlrs(julia_type = "WithMethodTable")]
         pub struct WithMethodTable<'scope, 'data> {
             pub a: ::std::option::Option<::jlrs::data::managed::value::WeakValue<'scope, 'data>>,
         }"""
@@ -363,7 +363,7 @@ end
 
         sb[WithTypeMapEntry] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
-        #[jlrs(julia_type = "Main.WithTypeMapEntry")]
+        #[jlrs(julia_type = "WithTypeMapEntry")]
         pub struct WithTypeMapEntry<'scope, 'data> {
             pub a: ::std::option::Option<::jlrs::data::managed::value::WeakValue<'scope, 'data>>,
         }"""
@@ -375,7 +375,7 @@ end
 
         sb[WithTypeMapLevel] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
-        #[jlrs(julia_type = "Main.WithTypeMapLevel")]
+        #[jlrs(julia_type = "WithTypeMapLevel")]
         pub struct WithTypeMapLevel<'scope, 'data> {
             pub a: ::std::option::Option<::jlrs::data::managed::value::WeakValue<'scope, 'data>>,
         }"""

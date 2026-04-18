@@ -61,7 +61,7 @@ end
 
         sb[BitsTypeBool] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, IsBits, ConstructType, CCallArg, CCallReturn)]
-        #[jlrs(julia_type = "Main.BitsTypeBool")]
+        #[jlrs(julia_type = "BitsTypeBool")]
         pub struct BitsTypeBool {
             pub a: ::jlrs::data::layout::bool::Bool,
         }"""
@@ -73,7 +73,7 @@ end
 
         sb[BitsTypeChar] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, IsBits, ConstructType, CCallArg, CCallReturn)]
-        #[jlrs(julia_type = "Main.BitsTypeChar")]
+        #[jlrs(julia_type = "BitsTypeChar")]
         pub struct BitsTypeChar {
             pub a: ::jlrs::data::layout::char::Char,
         }"""
@@ -85,7 +85,7 @@ end
 
         sb[BitsTypeUInt8] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, IsBits, ConstructType, CCallArg, CCallReturn)]
-        #[jlrs(julia_type = "Main.BitsTypeUInt8")]
+        #[jlrs(julia_type = "BitsTypeUInt8")]
         pub struct BitsTypeUInt8 {
             pub a: u8,
         }"""
@@ -97,7 +97,7 @@ end
 
         sb[BitsTypeUInt16] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, IsBits, ConstructType, CCallArg, CCallReturn)]
-        #[jlrs(julia_type = "Main.BitsTypeUInt16")]
+        #[jlrs(julia_type = "BitsTypeUInt16")]
         pub struct BitsTypeUInt16 {
             pub a: u16,
         }"""
@@ -109,7 +109,7 @@ end
 
         sb[BitsTypeUInt32] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, IsBits, ConstructType, CCallArg, CCallReturn)]
-        #[jlrs(julia_type = "Main.BitsTypeUInt32")]
+        #[jlrs(julia_type = "BitsTypeUInt32")]
         pub struct BitsTypeUInt32 {
             pub a: u32,
         }"""
@@ -121,7 +121,7 @@ end
 
         sb[BitsTypeUInt64] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, IsBits, ConstructType, CCallArg, CCallReturn)]
-        #[jlrs(julia_type = "Main.BitsTypeUInt64")]
+        #[jlrs(julia_type = "BitsTypeUInt64")]
         pub struct BitsTypeUInt64 {
             pub a: u64,
         }"""
@@ -133,7 +133,7 @@ end
 
         sb[BitsTypeUInt] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, IsBits, ConstructType, CCallArg, CCallReturn)]
-        #[jlrs(julia_type = "Main.BitsTypeUInt")]
+        #[jlrs(julia_type = "BitsTypeUInt")]
         pub struct BitsTypeUInt {
             pub a: u64,
         }"""
@@ -145,7 +145,7 @@ end
 
         sb[BitsTypeInt8] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, IsBits, ConstructType, CCallArg, CCallReturn)]
-        #[jlrs(julia_type = "Main.BitsTypeInt8")]
+        #[jlrs(julia_type = "BitsTypeInt8")]
         pub struct BitsTypeInt8 {
             pub a: i8,
         }"""
@@ -157,7 +157,7 @@ end
 
         sb[BitsTypeInt16] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, IsBits, ConstructType, CCallArg, CCallReturn)]
-        #[jlrs(julia_type = "Main.BitsTypeInt16")]
+        #[jlrs(julia_type = "BitsTypeInt16")]
         pub struct BitsTypeInt16 {
             pub a: i16,
         }"""
@@ -169,7 +169,7 @@ end
 
         sb[BitsTypeInt32] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, IsBits, ConstructType, CCallArg, CCallReturn)]
-        #[jlrs(julia_type = "Main.BitsTypeInt32")]
+        #[jlrs(julia_type = "BitsTypeInt32")]
         pub struct BitsTypeInt32 {
             pub a: i32,
         }"""
@@ -181,7 +181,7 @@ end
 
         sb[BitsTypeInt64] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, IsBits, ConstructType, CCallArg, CCallReturn)]
-        #[jlrs(julia_type = "Main.BitsTypeInt64")]
+        #[jlrs(julia_type = "BitsTypeInt64")]
         pub struct BitsTypeInt64 {
             pub a: i64,
         }"""
@@ -193,7 +193,7 @@ end
 
         sb[BitsTypeInt] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, IsBits, ConstructType, CCallArg, CCallReturn)]
-        #[jlrs(julia_type = "Main.BitsTypeInt")]
+        #[jlrs(julia_type = "BitsTypeInt")]
         pub struct BitsTypeInt {
             pub a: i64,
         }"""
@@ -205,7 +205,7 @@ end
 
         sb[BitsTypeFloat32] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, IsBits, ConstructType, CCallArg, CCallReturn)]
-        #[jlrs(julia_type = "Main.BitsTypeFloat32")]
+        #[jlrs(julia_type = "BitsTypeFloat32")]
         pub struct BitsTypeFloat32 {
             pub a: f32,
         }"""
@@ -217,7 +217,7 @@ end
 
         sb[BitsTypeFloat64] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, IsBits, ConstructType, CCallArg, CCallReturn)]
-        #[jlrs(julia_type = "Main.BitsTypeFloat64")]
+        #[jlrs(julia_type = "BitsTypeFloat64")]
         pub struct BitsTypeFloat64 {
             pub a: f64,
         }"""

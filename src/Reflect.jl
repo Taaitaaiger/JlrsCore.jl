@@ -117,6 +117,7 @@ end
 
 struct Layouts
     typed_bits_union::Bool
+    elide_main::Bool
     dict::IdDict{DataType,Layout}
 end
 
@@ -125,7 +126,7 @@ struct StringLayouts
 end
 
 """
-    reflect(types::Vector{<:Type}; f16::Bool=false, complex::Bool=false, typed_bits_union::Bool=false)::Layouts
+    reflect(types::Vector{<:Type}; f16::Bool=false, complex::Bool=false, typed_bits_union::Bool=false, elide_main::Bool=true)::Layouts
 
 Generate Rust layouts and type constructors for all types in `types` and their dependencies. The
 only requirement is that these types must not contain any union or tuple fields that directly
@@ -191,7 +192,7 @@ pub struct Complex<T> {
 }
 ```
 """
-function reflect(types::Vector{<:Type}; f16::Bool=false, complex::Bool=false, typed_bits_union::Bool=false)::Layouts
+function reflect(types::Vector{<:Type}; f16::Bool=false, complex::Bool=false, typed_bits_union::Bool=false, elide_main::Bool=true)::Layouts
     deps = IdDict{DataType,IdSet{DataType}}()
     layouts = IdDict{DataType,Layout}()
     insertbuiltins!(layouts)
@@ -219,7 +220,7 @@ function reflect(types::Vector{<:Type}; f16::Bool=false, complex::Bool=false, ty
     # If any of the fields of a generated layout contain a parameter with lifetimes, these
     # lifetimes must be propagated to the layout's parameters.
     propagate_internal_param_lifetimes!(layouts)
-    Layouts(typed_bits_union, layouts)
+    Layouts(typed_bits_union, elide_main, layouts)
 end
 
 """
@@ -338,7 +339,7 @@ function StringLayouts(layouts::Layouts)
     strlayouts = IdDict{DataType,String}()
 
     for (name, value) in pairs(layouts.dict)
-        rustimpl = strlayout(value, layouts.dict, layouts.typed_bits_union)
+        rustimpl = strlayout(value, layouts.dict, layouts.typed_bits_union, layouts.elide_main)
         if rustimpl !== nothing
             strlayouts[name] = rustimpl
         end
@@ -360,7 +361,7 @@ function show(io::IO, layouts::Layouts)
     end
 
     for name in sort(names, lt=(a, b) -> string(a) < string(b))
-        rustimpl = strlayout(layouts.dict[name], layouts.dict, layouts.typed_bits_union)
+        rustimpl = strlayout(layouts.dict[name], layouts.dict, layouts.typed_bits_union, layouts.elide_main)
         if rustimpl !== nothing
             push!(rustimpls, rustimpl)
         end
@@ -378,7 +379,7 @@ function write(io::IO, layouts::Layouts)
     end
 
     for name in sort(names, lt=(a, b) -> string(a) < string(b))
-        rustimpl = strlayout(layouts.dict[name], layouts.dict, layouts.typed_bits_union)
+        rustimpl = strlayout(layouts.dict[name], layouts.dict, layouts.typed_bits_union, layouts.elide_main)
         if rustimpl !== nothing
             push!(rustimpls, rustimpl)
         end
@@ -1306,10 +1307,14 @@ function structfield_parts(layout::StructLayout, field::StructField, layouts::Id
     parts
 end
 
-function filteredname(mod::Module)::Vector{String}
+function filteredname(mod::Module, elide_main::Bool)::Vector{String}
     parts = Vector{String}()
     for part in fullname(mod)
         s_part = string(part);
+
+        if elide_main && s_part == "Main"
+            continue
+        end
 
         if !startswith(s_part, "__doctest")
             push!(parts, s_part)
@@ -1319,15 +1324,21 @@ function filteredname(mod::Module)::Vector{String}
     parts
 end
 
-strlayout(::BuiltinLayout, ::IdDict{DataType,Layout}, ::Bool)::Union{Nothing,String} = nothing
-strlayout(::UnsupportedLayout, ::IdDict{DataType,Layout}, ::Bool)::Union{Nothing,String} = nothing
-strlayout(::BuiltinAbstractLayout, ::IdDict{DataType,Layout}, ::Bool)::Union{Nothing,String} = nothing
+strlayout(::BuiltinLayout, ::IdDict{DataType,Layout}, ::Bool, ::Bool)::Union{Nothing,String} = nothing
+strlayout(::UnsupportedLayout, ::IdDict{DataType,Layout}, ::Bool, ::Bool)::Union{Nothing,String} = nothing
+strlayout(::BuiltinAbstractLayout, ::IdDict{DataType,Layout}, ::Bool, ::Bool)::Union{Nothing,String} = nothing
 
-function strlayout(layout::AbstractTypeLayout, ::IdDict{DataType,Layout}, ::Bool)::Union{Nothing,String}
+function strlayout(layout::AbstractTypeLayout, ::IdDict{DataType,Layout}, ::Bool, elide_main::Bool)::Union{Nothing,String}
     typepath = string(layout.path)
     if length(typepath) == 0
-        modulepath = join(filteredname(layout.typename.module), ".")
-        typepath = "$(modulepath).$(layout.typename.name)"
+        modulepath = join(filteredname(layout.type.name.module, elide_main), '.')
+        if length(modulepath) == 0
+            typepath = "$(layout.type.name.name)"
+            ""
+        else
+            typepath = "$(modulepath).$(layout.type.name.name)"
+            "$(modulepath)."
+        end
     end
 
     parts = []
@@ -1350,11 +1361,17 @@ function strlayout(layout::AbstractTypeLayout, ::IdDict{DataType,Layout}, ::Bool
     join(parts, "\n")
 end
 
-function strlayout(layout::ContainsAtomicFieldsLayout, ::IdDict{DataType,Layout}, ::Bool)::Union{Nothing,String}
+function strlayout(layout::ContainsAtomicFieldsLayout, ::IdDict{DataType,Layout}, ::Bool, elide_main::Bool)::Union{Nothing,String}
     typepath = string(layout.path)
     if length(typepath) == 0
-        modulepath = join(filteredname(layout.typename.module), ".")
-        typepath = "$(modulepath).$(layout.typename.name)"
+        modulepath = join(filteredname(layout.type.name.module, elide_main), '.')
+        if length(modulepath) == 0
+            typepath = "$(layout.type.name.name)"
+            ""
+        else
+            typepath = "$(modulepath).$(layout.type.name.name)"
+            "$(modulepath)."
+        end
     end
 
     parts = []
@@ -1377,15 +1394,20 @@ function strlayout(layout::ContainsAtomicFieldsLayout, ::IdDict{DataType,Layout}
     join(parts, "\n")
 end
 
-function strlayout(layout::EnumLayout, layouts::IdDict{DataType,Layout}, ::Bool)::Union{Nothing,String}
+function strlayout(layout::EnumLayout, layouts::IdDict{DataType,Layout}, ::Bool, elide_main::Bool)::Union{Nothing,String}
     repr = layout.type.super.parameters[1]
     repr_rsname = layouts[repr].rsname
 
     typepath = string(layout.path)
     modulepath = if length(typepath) == 0
-        modulepath = join(filteredname(layout.type.name.module), '.')
-        typepath = "$(modulepath).$(layout.type.name.name)"
-        modulepath
+        modulepath = join(filteredname(layout.type.name.module, elide_main), '.')
+        if length(modulepath) == 0
+            typepath = "$(layout.type.name.name)"
+            ""
+        else
+            typepath = "$(modulepath).$(layout.type.name.name)"
+            "$(modulepath)."
+        end
     else
         split_name = split(typepath, '.')
         pop!(split_name)
@@ -1406,7 +1428,7 @@ function strlayout(layout::EnumLayout, layouts::IdDict{DataType,Layout}, ::Bool)
         push!(
             parts,
             "    #[allow(non_camel_case_types)]",
-            "    #[jlrs(julia_enum_variant = \"$(modulepath).$(variant.name)\")]",
+            "    #[jlrs(julia_enum_variant = \"$(modulepath)$(variant.name)\")]",
             "    $(variant.rsname) = $(repr(variant.value)),"
         )
     end
@@ -1416,7 +1438,7 @@ function strlayout(layout::EnumLayout, layouts::IdDict{DataType,Layout}, ::Bool)
     join(parts, "\n")
 end
 
-function strlayout(layout::StructLayout, layouts::IdDict{DataType,Layout}, typed_bits_union::Bool)::Union{Nothing,String}
+function strlayout(layout::StructLayout, layouts::IdDict{DataType,Layout}, typed_bits_union::Bool, elide_main::Bool)::Union{Nothing,String}
     ty = getproperty(layout.typename.module, layout.typename.name)
 
     is_parameter_free = ty isa DataType && isnothing(findfirst(p -> p isa TypeVar, ty.parameters))
@@ -1439,8 +1461,12 @@ function strlayout(layout::StructLayout, layouts::IdDict{DataType,Layout}, typed
 
     typepath = string(layout.path)
     if length(typepath) == 0
-        modulepath = join(filteredname(layout.typename.module), ".")
-        typepath = "$(modulepath).$(layout.typename.name)"
+        modulepath = join(filteredname(layout.typename.module, elide_main), ".")
+        if length(modulepath) == 0
+            typepath = "$(layout.typename.name)"
+        else
+            typepath = "$(modulepath).$(layout.typename.name)"
+        end
     end
 
     typepath_annotation = "julia_type = \"$(typepath)\""

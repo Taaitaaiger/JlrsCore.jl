@@ -4,6 +4,8 @@
 
 - Support exporting public items from wrapped modules.
 
+- Reflected types elide the `Main` module by default; to opt out of this change, set `elide_main=false` when calling `reflect`.
+
 - `JLRS_API_VERSION` is now 5.
 
 ## v0.6.1

@@ -16,7 +16,7 @@ end
         sb = Reflect.StringLayouts(b)
 
         sb.dict[Reflect.basetype(HasAtomicField)] === """#[derive(ConstructType)]
-        #[jlrs(julia_type = "Main.HasAtomicField")]
+        #[jlrs(julia_type = "HasAtomicField")]
         pub struct HasAtomicFieldTypeConstructor {
         }"""
     end
@@ -29,7 +29,7 @@ end
 
         sb[WithInt32] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, IsBits, ConstructType, CCallArg, CCallReturn)]
-        #[jlrs(julia_type = "Main.WithInt32")]
+        #[jlrs(julia_type = "WithInt32")]
         pub struct WithInt32 {
             pub int32: i32,
         }"""

@@ -15,7 +15,7 @@ end
 
         sb[BitsIntChar] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, IsBits, ConstructType, CCallArg, CCallReturn)]
-        #[jlrs(julia_type = "Main.BitsIntChar")]
+        #[jlrs(julia_type = "BitsIntChar")]
         pub struct BitsIntChar {
             pub a: i64,
             pub b: ::jlrs::data::layout::char::Char,
@@ -23,7 +23,7 @@ end
 
         sb[BitsCharBitsIntChar] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, IsBits, ConstructType, CCallArg, CCallReturn)]
-        #[jlrs(julia_type = "Main.BitsCharBitsIntChar")]
+        #[jlrs(julia_type = "BitsCharBitsIntChar")]
         pub struct BitsCharBitsIntChar {
             pub a: ::jlrs::data::layout::char::Char,
             pub b: BitsIntChar,
