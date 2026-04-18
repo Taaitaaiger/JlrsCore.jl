@@ -37,7 +37,7 @@ end
 
         sb[MutF32] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ConstructType)]
-        #[jlrs(julia_type = "Main.MutF32")]
+        #[jlrs(julia_type = "MutF32")]
         pub struct MutF32 {
             pub a: f32,
         }"""
@@ -49,7 +49,7 @@ end
 
         sb[MutNested] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ConstructType)]
-        #[jlrs(julia_type = "Main.MutNested")]
+        #[jlrs(julia_type = "MutNested")]
         pub struct MutNested<'scope, 'data> {
             pub a: ::std::option::Option<::jlrs::data::managed::value::WeakValue<'scope, 'data>>,
         }"""
@@ -66,7 +66,7 @@ end
 
         sb[Immut] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
-        #[jlrs(julia_type = "Main.Immut")]
+        #[jlrs(julia_type = "Immut")]
         pub struct Immut<'scope, 'data> {
             pub a: ::std::option::Option<::jlrs::data::managed::value::WeakValue<'scope, 'data>>,
         }"""
@@ -78,7 +78,7 @@ end
 
         sb[HasImmut] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ConstructType)]
-        #[jlrs(julia_type = "Main.HasImmut")]
+        #[jlrs(julia_type = "HasImmut")]
         pub struct HasImmut<'scope, 'data> {
             pub a: Immut<'scope, 'data>,
         }"""
@@ -90,7 +90,7 @@ end
 
         sb[DoubleImmut] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
-        #[jlrs(julia_type = "Main.DoubleImmut")]
+        #[jlrs(julia_type = "DoubleImmut")]
         pub struct DoubleImmut<'scope, 'data> {
             pub a: Immut<'scope, 'data>,
         }"""
@@ -102,7 +102,7 @@ end
 
         sb[Reflect.basetype(HasGeneric)] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ConstructType)]
-        #[jlrs(julia_type = "Main.HasGeneric")]
+        #[jlrs(julia_type = "HasGeneric")]
         pub struct HasGeneric<T> {
             pub a: T,
         }"""
@@ -114,13 +114,13 @@ end
 
         sb[Reflect.basetype(HasGenericImmut)] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField)]
-        #[jlrs(julia_type = "Main.HasGenericImmut")]
+        #[jlrs(julia_type = "HasGenericImmut")]
         pub struct HasGenericImmut<'scope, 'data> {
             pub a: ::std::option::Option<::jlrs::data::managed::value::WeakValue<'scope, 'data>>,
         }
 
         #[derive(ConstructType, HasLayout)]
-        #[jlrs(julia_type = "Main.HasGenericImmut", constructor_for = "HasGenericImmut", scope_lifetime = true, data_lifetime = true, layout_params = [], elided_params = ["T"], all_params = ["T"])]
+        #[jlrs(julia_type = "HasGenericImmut", constructor_for = "HasGenericImmut", scope_lifetime = true, data_lifetime = true, layout_params = [], elided_params = ["T"], all_params = ["T"])]
         pub struct HasGenericImmutTypeConstructor<T> {
             _t: ::std::marker::PhantomData<T>,
         }"""
@@ -132,13 +132,13 @@ end
 
         sb[Reflect.basetype(DoubleHasGeneric)] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck)]
-        #[jlrs(julia_type = "Main.DoubleHasGeneric")]
+        #[jlrs(julia_type = "DoubleHasGeneric")]
         pub struct DoubleHasGeneric<'scope, 'data> {
             pub a: ::std::option::Option<::jlrs::data::managed::value::WeakValue<'scope, 'data>>,
         }
 
         #[derive(ConstructType, HasLayout)]
-        #[jlrs(julia_type = "Main.DoubleHasGeneric", constructor_for = "DoubleHasGeneric", scope_lifetime = true, data_lifetime = true, layout_params = [], elided_params = ["T"], all_params = ["T"])]
+        #[jlrs(julia_type = "DoubleHasGeneric", constructor_for = "DoubleHasGeneric", scope_lifetime = true, data_lifetime = true, layout_params = [], elided_params = ["T"], all_params = ["T"])]
         pub struct DoubleHasGenericTypeConstructor<T> {
             _t: ::std::marker::PhantomData<T>,
         }"""

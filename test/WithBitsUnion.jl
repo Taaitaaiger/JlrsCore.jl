@@ -33,7 +33,7 @@ end
 
         sb[Reflect.basetype(SingleVariant)] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, IntoJulia, ValidField, IsBits, ConstructType, CCallArg, CCallReturn)]
-        #[jlrs(julia_type = "Main.SingleVariant")]
+        #[jlrs(julia_type = "SingleVariant")]
         pub struct SingleVariant {
             pub a: i32,
         }"""
@@ -45,7 +45,7 @@ end
 
         sb[Reflect.basetype(DoubleVariant)] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
-        #[jlrs(julia_type = "Main.DoubleVariant")]
+        #[jlrs(julia_type = "DoubleVariant")]
         pub struct DoubleVariant {
             #[jlrs(bits_union_align)]
             _a_align: ::jlrs::data::layout::union::Align4,
@@ -62,7 +62,7 @@ end
 
         sb[Reflect.basetype(SizeAlignMismatch)] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
-        #[jlrs(julia_type = "Main.SizeAlignMismatch")]
+        #[jlrs(julia_type = "SizeAlignMismatch")]
         pub struct SizeAlignMismatch {
             #[jlrs(bits_union_align)]
             _a_align: ::jlrs::data::layout::union::Align4,
@@ -79,7 +79,7 @@ end
 
         sb[Reflect.basetype(UnionInTuple)] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
-        #[jlrs(julia_type = "Main.UnionInTuple")]
+        #[jlrs(julia_type = "UnionInTuple")]
         pub struct UnionInTuple<'scope, 'data> {
             pub a: ::std::option::Option<::jlrs::data::managed::value::WeakValue<'scope, 'data>>,
         }"""
@@ -91,7 +91,7 @@ end
 
         sb[WithElidedInUnion] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
-        #[jlrs(julia_type = "Main.WithElidedInUnion")]
+        #[jlrs(julia_type = "WithElidedInUnion")]
         pub struct WithElidedInUnion {
             #[jlrs(bits_union_align)]
             _a_align: ::jlrs::data::layout::union::Align8,
@@ -108,7 +108,7 @@ end
 
         sb[WithElidedInUnion] === """#[repr(C)]
         #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField, ConstructType, CCallArg)]
-        #[jlrs(julia_type = "Main.WithElidedInUnion")]
+        #[jlrs(julia_type = "WithElidedInUnion")]
         pub struct WithElidedInUnion {
             #[jlrs(bits_union_align)]
             _a_align: ::jlrs::data::layout::union::Align8,
