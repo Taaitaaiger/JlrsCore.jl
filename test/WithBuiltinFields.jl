@@ -66,6 +66,10 @@ struct WithUnionAll
     a::UnionAll
 end
 
+struct WithType{T}
+    a::Type{T}
+end
+
 @testset "Structs with builtin fields" begin
     @test begin
         b = Reflect.reflect([WithArray])
@@ -378,6 +382,24 @@ end
         #[jlrs(julia_type = "WithTypeMapLevel")]
         pub struct WithTypeMapLevel<'scope, 'data> {
             pub a: ::std::option::Option<::jlrs::data::managed::value::WeakValue<'scope, 'data>>,
+        }"""
+    end
+
+    @test begin
+        b = Reflect.reflect([WithType{Bool}])
+        sb = Reflect.StringLayouts(b)
+
+        sb[Reflect.basetype(WithType)] === """#[repr(C)]
+        #[derive(Clone, Debug, Unbox, ValidLayout, Typecheck, ValidField)]
+        #[jlrs(julia_type = "WithType")]
+        pub struct WithType<'scope, 'data> {
+            pub a: ::std::option::Option<::jlrs::data::managed::value::WeakValue<'scope, 'data>>,
+        }
+
+        #[derive(ConstructType, HasLayout)]
+        #[jlrs(julia_type = "WithType", constructor_for = "WithType", scope_lifetime = true, data_lifetime = true, layout_params = [], elided_params = ["T"], all_params = ["T"])]
+        pub struct WithTypeTypeConstructor<T> {
+            _t: ::std::marker::PhantomData<T>,
         }"""
     end
 end
