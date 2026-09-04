@@ -441,7 +441,12 @@ function toposort!(data::IdDict{DataType, IdSet{DataType}})::Vector{DataType}
 end
 
 # The innermost `body` of a `UnionAll`
-function partialtype(type::UnionAll)::DataType
+# The return type is annotated as `Type` rather than `DataType` because the
+# innermost body can be a `Type{T}` (e.g. for `Core.Type` itself). Under the
+# TypeEq type-system refactor (JuliaLang/julia#61915) `typeof(Type{T})` is
+# `TypeEq` rather than `DataType`, so annotating `::DataType` here would force a
+# `convert(DataType, Type{T})` that throws a `MethodError`.
+function partialtype(type::UnionAll)::Type
     t = type
 
     while t.body isa UnionAll
@@ -457,14 +462,18 @@ function partialtype(type::DataType)::DataType
 end
 
 # The type with all its parameters erased
-function basetype(type::DataType)::DataType
+function basetype(type::DataType)::Type
     definition = getproperty(type.name.module, type.name.name)
     partialtype(definition)
 end
 
 # The type with all its parameters erased, including those set on the innermost `body`.
-function basetype(type::UnionAll)::DataType
+function basetype(type::UnionAll)::Type
     partial = partialtype(type)
+    # The innermost body of `Core.Type` is `Type{T}`. Accessing `.name` on it is
+    # deprecated under the TypeEq type-system refactor (JuliaLang/julia#61915);
+    # the base type is just `Type` itself in that case.
+    Base.isType(partial) && return Type
     definition = getproperty(partial.name.module, partial.name.name)
     partialtype(definition)
 end
@@ -520,7 +529,16 @@ function insertbuiltins!(layouts::IdDict{DataType,Layout})::Nothing
     layouts[basetype(Core.AbstractArray)] = BuiltinAbstractLayout()
     layouts[basetype(Core.DenseArray)] = BuiltinAbstractLayout()
     layouts[basetype(Core.Ref)] = BuiltinAbstractLayout()
-    layouts[basetype(Core.Type)] = BuiltinAbstractLayout()
+    # The abstract `Type` builtin is handled directly via `Base.isType` where
+    # fields are processed (see `structfield`), so a layout only needs to be
+    # registered here when `basetype(Core.Type)` is a concrete `DataType` key.
+    # Under the TypeEq type-system refactor (JuliaLang/julia#61915) it is not,
+    # since `typeof(Type{T})` is `TypeEq` rather than `DataType`.
+    let typebase = basetype(Core.Type)
+        if typebase isa DataType
+            layouts[typebase] = BuiltinAbstractLayout()
+        end
+    end
 
     layouts[basetype(Base.AbstractChannel)] = BuiltinAbstractLayout()
     layouts[basetype(Base.AbstractDict)] = BuiltinAbstractLayout()
@@ -829,6 +847,13 @@ function structfield(fieldname::Symbol, @nospecialize(fieldtype::Union{Type,Type
         end
     elseif fieldtype == Union{}
         StructField(fieldname, string(fieldname), layouts[Union{}], [], IdSet(), false, false, false)
+    elseif Base.isType(fieldtype)
+        # A `Type{T}` field. Under the TypeEq type-system refactor
+        # (JuliaLang/julia#61915) `typeof(Type{T})` is `TypeEq` rather than
+        # `DataType`, so this no longer reaches the `fieldtype isa DataType`
+        # branch below where the abstract `Type` builtin would route it to a
+        # `WeakValue`. Handle it here to preserve that behavior.
+        StructField(fieldname, string(fieldname), layouts[Any], [], IdSet(), true, true, false)
     elseif fieldtype <: Tuple
         params = extractparams(fieldtype, layouts)
         if length(params) > 0
