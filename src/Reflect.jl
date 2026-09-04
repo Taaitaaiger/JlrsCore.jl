@@ -606,6 +606,8 @@ function is_pointer_free_type(ty, env)
             elseif !has_pointer_free_partialtype(ty, env)
                 return false
             end
+        elseif Base.isType(ty)
+            return false
         end
     end
 
