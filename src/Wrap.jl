@@ -96,7 +96,7 @@ function register_julia_module(mod::Module, fptr::Ptr{Cvoid}, deps::Vector{Modul
 end
 
 function initialize_julia_module(mod::Module, deps)
-    lib = Libdl.dlopen(mod.__jlrswrap_sopath, mod.__jlrswrap_flags)
+    lib = Libdl.dlopen(mod.__jlrswrap_sopath(), mod.__jlrswrap_flags)
 
     fptr = Libdl.dlsym(lib, mod.__jlrswrap_init_func)
     modinfo = register_julia_module(mod, fptr, deps, 0x0)
@@ -310,7 +310,11 @@ function generate_docs(doc_items::Vector{DocItem})
     end
 end
 
-function wrapmodule(so_path::AbstractString, init_fn_name, m::Module, flags)
+function wrapmodule(so_path::String, init_fn_name, m::Module, flags)
+    wrapmodule(() -> so_path, init_fn_name, m, flags)
+end
+
+function wrapmodule(so_path_cb::Function, init_fn_name, m::Module, flags)
     if isdefined(m, :__jlrswrap_methodkeys)
         return
     end
@@ -323,9 +327,11 @@ function wrapmodule(so_path::AbstractString, init_fn_name, m::Module, flags)
 
     Core.eval(m, :(const __jlrswrap_methodkeys = $(MethodKey)[]))
     Core.eval(m, :(const __jlrswrap_pointers = $(FunctionPointer)[]))
-    Core.eval(m, :(const __jlrswrap_sopath = $so_path))
+    Core.eval(m, :(const __jlrswrap_sopath = $so_path_cb))
     Core.eval(m, :(const __jlrswrap_init_func = $(QuoteNode(init_funcname))))
     Core.eval(m, :(const __jlrswrap_flags = $flags))
+
+    so_path = so_path_cb()
 
     fptr = Libdl.dlsym(Libdl.dlopen(so_path, flags), init_funcname)
     modinfo = register_julia_module(m, fptr, Module[], 0x1)

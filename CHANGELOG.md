@@ -8,6 +8,8 @@
 
 - Source links of wrapped modules link to Rust source if the library has been built with the `jl-docs` feature.
 
+- The first argument of `@wrapmodule` accepts either the path to the library or a function without arguments that returns that path.
+
 ## v0.7.0
 
 - Support exporting public items from wrapped modules.
