@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.8.0
+
+- Dependencies of a wrapped module can be passed to `initjlrs`.
+
+- `JLRS_API_VERSION` is now 6.
+
 ## v0.7.0
 
 - Support exporting public items from wrapped modules.

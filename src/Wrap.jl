@@ -89,15 +89,15 @@ function _get_function_pointer(mkey)
     return __global_method_map[mkey]
 end
 
-function register_julia_module(mod::Module, fptr::Ptr{Cvoid}, precompiling::UInt8)::Union{Nothing, JlrsModuleInfo}
-    ccall(fptr, Any, (Any, UInt8), mod, precompiling)
+function register_julia_module(mod::Module, fptr::Ptr{Cvoid}, deps::Vector{Module}, precompiling::UInt8)::Union{Nothing, JlrsModuleInfo}
+    ccall(fptr, Any, (Any, UInt8, Vector{Module}), mod, precompiling, deps)
 end
 
-function initialize_julia_module(mod::Module)
+function initialize_julia_module(mod::Module, deps)
     lib = Libdl.dlopen(mod.__jlrswrap_sopath, mod.__jlrswrap_flags)
 
     fptr = Libdl.dlsym(lib, mod.__jlrswrap_init_func)
-    modinfo = register_julia_module(mod, fptr, 0x0)
+    modinfo = register_julia_module(mod, fptr, deps, 0x0)
     if isnothing(modinfo)
         return
     end
@@ -317,7 +317,7 @@ function wrapmodule(so_path::AbstractString, init_fn_name, m::Module, filename, 
     Core.eval(m, :(const __jlrswrap_flags = $flags))
 
     fptr = Libdl.dlsym(Libdl.dlopen(so_path, flags), init_funcname)
-    modinfo = register_julia_module(m, fptr, 0x1)
+    modinfo = register_julia_module(m, fptr, Module[], 0x1)
     if isnothing(modinfo)
         return
     end
@@ -343,8 +343,13 @@ end
 
 Initialize the Rust function pointer tables in a precompiled module and reinitialize exported
 types. Must be called from within `__init__` in the wrapped module.
+
+If the wrapped code depends on other packages, these package modules must be provided as the
+dependencies. For example, if the wrapped code uses types from `StaticArrays`, use
+`@initjlrs [StaticArrays]`. If dependencies are missing, the module cannot be loaded after
+precompilation.
 """
-macro initjlrs()
-    return :(initialize_julia_module($__module__))
+macro initjlrs(deps=Module[])
+    return :(initialize_julia_module($__module__, $(esc(deps))))
 end
 end
