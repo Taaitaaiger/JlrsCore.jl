@@ -6,6 +6,8 @@
 
 - `JLRS_API_VERSION` is now 6.
 
+- Source links of wrapped modules link to Rust source if the library has been built with the `jl-docs` feature.
+
 ## v0.7.0
 
 - Support exporting public items from wrapped modules.
