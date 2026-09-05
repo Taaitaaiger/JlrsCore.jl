@@ -23,6 +23,8 @@ end
 
 struct DocItem
     mod::Module
+    filename::String
+    line::Int
     item::Symbol
     signature
     doc::String
@@ -288,18 +290,27 @@ function wrap_functions(functions, julia_mod)
     end
 end
 
-function generate_docs(filename, doc_items::Vector{DocItem})
+function generate_docs(doc_items::Vector{DocItem})
     for item in doc_items
         binding = Binding(item.mod, item.item)
         docstring = docstr(item.doc)
-        docstring.data[:path] = filename
         docstring.data[:module] = item.mod
-        docstring.data[:linenumber] = 1
+        docstring.data[:linenumber] = item.line
+
+        # item.filename is only set if the library has been built with the jl-docs feature
+        # enabled. An empty filename creates an invalid link, so point elsewhere to avoid
+        # creating a source link in the docs.
+        if length(item.filename) > 0
+            docstring.data[:path] = item.filename
+        else
+            docstring.data[:path] = "/"
+        end
+
         doc!(item.mod, binding, docstring, item.signature)
     end
 end
 
-function wrapmodule(so_path::AbstractString, init_fn_name, m::Module, filename, flags)
+function wrapmodule(so_path::AbstractString, init_fn_name, m::Module, flags)
     if isdefined(m, :__jlrswrap_methodkeys)
         return
     end
@@ -324,7 +335,7 @@ function wrapmodule(so_path::AbstractString, init_fn_name, m::Module, filename, 
 
     wrap_exports(modinfo.exports, m)
     wrap_functions(modinfo.func_info, m)
-    generate_docs(filename, modinfo.docs)
+    generate_docs(modinfo.docs)
 end
 
 """
@@ -335,7 +346,7 @@ module enclosing this macro call by calling an entrypoint named `init_fn_name`. 
 must have been generated with the `julia_module` macro provided by the jlrs crate.
 """
 macro wrapmodule(libraryfile, init_fn_name, flags=:(nothing))
-    return :(wrapmodule($(esc(libraryfile)), $(esc(init_fn_name)),$__module__, @__FILE__, $(esc(flags))))
+    return :(wrapmodule($(esc(libraryfile)), $(esc(init_fn_name)),$__module__, $(esc(flags))))
 end
 
 """
